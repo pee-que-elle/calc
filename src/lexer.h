@@ -18,7 +18,7 @@ typedef enum TokenType {
 
 typedef struct LexerToken {
     TokenType type;
-    void *value;
+    char *value;
     size_t original_tokenc; /* Original token size */
 } LexerToken;
 
@@ -37,6 +37,7 @@ LexerToken* tokenize(char *input);
     LexerToken* tokenize_parens(char *input);
 
 
-char *tok2str(TokenType t);
+char *toktype2str(TokenType t);
+char *tok2str(LexerToken *tok);
 
 #endif // CALC_LEXER

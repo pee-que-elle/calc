@@ -22,7 +22,7 @@ LexerToken* create_filledtoken(TokenType type, void* value, size_t n)
     /* creates a token from a null-terminated string */
     LexerToken *tok = create_emptytoken(type);
     tok->value = malloc(n);
-    memcpy(tok->value, value, n);
+    strncpy(tok->value, value, n);
     return tok;
 }
 
@@ -73,6 +73,7 @@ LexerToken* tokenize(char *input)
         
     LexerToken *result = NULL;
     
+    CHECK(tokenize_parens);    
     CHECK(tokenize_stringliteral);
     CHECK(tokenize_floatliteral);
     CHECK(tokenize_intliteral);
@@ -95,7 +96,7 @@ LexerToken* tokenize_stringliteral(char *input)
             /* string content range is [1, i-1], length is i - 2 */
             size_t len = i - 2;
             LexerToken *result = create_filledtoken(TOKEN_STRING, &result[1], len+1);
-            ((char*)(result->value))[len] = 0; /* null-terminate string properly */
+            result->value[len] = 0; /* null-terminate string properly */
             result->original_tokenc = len + 2; 
             return result;
         }         
@@ -137,14 +138,11 @@ LexerToken* tokenize_intliteral(char *input)
     }
 
     if(count == 0) return NULL;
-    char* b = malloc(count + 1);
-    strncpy(b, &input[basec], count);
-    b[count] = 0;
 
-    mpz_t result_int;
-    mpz_init_set_str(result_int, b, base);
+    LexerToken *result = create_filledtoken(TOKEN_INT, input, basec+count+1);
 
-    LexerToken *result = create_filledtoken(TOKEN_INT, result_int, sizeof result_int);
+    result->value[basec+count] = 0;
+
     result->original_tokenc = basec + count;
 
     return result;
@@ -169,14 +167,10 @@ LexerToken* tokenize_floatliteral(char *input)
 
     if(!encountered_dot || input[i-1] == '.') return NULL;
 
-    char *f = malloc(i);
-    strncpy(f, input, i);
-    f[i] = 0;
+    
+    LexerToken *result = create_filledtoken(TOKEN_FLOAT, input, i+1);
+    result->value[i] = 0;
 
-    mpf_t result_float;
-    mpf_init_set_str(result_float, f, 10);
-
-    LexerToken *result = create_filledtoken(TOKEN_FLOAT, result_float, sizeof result_float);
     result->original_tokenc = i;
 
     return result;
@@ -191,8 +185,9 @@ LexerToken* tokenize_operator(char *input)
         size_t current_len = strlen(current);
         if(strncmp(current, input, current_len) == 0)
         {
+            /* Fill value so we don't have to do a lookup when pretty-printing later */
             LexerToken* result = create_filledtoken(TOKEN_OPERATOR, current, current_len+1);
-            ((char*)(result->value))[current_len] = 0;
+            result->value[current_len] = 0;
             result->original_tokenc = current_len;
             return result;
         }
@@ -217,7 +212,7 @@ LexerToken* tokenize_parens(char* input)
 }
 
 
-char *tok2str(TokenType t)
+char *toktype2str(TokenType t)
 {
    switch(t)
    {
@@ -237,4 +232,34 @@ char *tok2str(TokenType t)
             return "terminate";
         default: return "????";
    } 
+}
+
+char *tok2str(LexerToken *tok)
+{
+    char *result;
+
+    mp_exp_t exp;
+
+    mpz_t import_z;
+    mpf_t import_f;
+    
+    mpz_init(import_z);
+    mpf_init(import_f);
+
+    switch(tok->type)
+    {
+        case TOKEN_STRING:
+        case TOKEN_INT:
+        case TOKEN_FLOAT:
+        case TOKEN_OPERATOR:
+            result = malloc(strlen(tok->value)+1);
+            strcpy(result, tok->value);
+            break;
+        case TOKEN_LPAREN:
+        case TOKEN_RPAREN:
+            result = calloc(0, 2);
+            result[0] = tok->type == TOKEN_LPAREN ? '(' : ')';
+            break;
+    }
+    return result;
 }
