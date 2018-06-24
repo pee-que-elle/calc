@@ -1,6 +1,9 @@
+#ifndef CALC_LEXER
+#define CALC_LEXER
+
 #include "ast.h"
 
-char *operators[] = {
+static char *operators[] = {
     "**",
     "*",
     "/",
@@ -15,17 +18,19 @@ char *operators[] = {
 };
 
 typedef enum TokenType { 
-    TOKEN_STRING, 
-    TOKEN_INT,
-    TOKEN_FLOAT,
-    TOKEN_OPERATOR,
-    TOKEN_LPAREN,
-    TOKEN_RPAREN
+    TOKEN_STRING,           /* String Literal */ 
+    TOKEN_INT,              /* Int Literal */
+    TOKEN_FLOAT,            /* Float Literal */
+    TOKEN_OPERATOR,         /* Operator */
+    TOKEN_LPAREN,           /* Left parenthesis, '(' */
+    TOKEN_RPAREN,           /* Right parenthesis, ')' */
+    METATOKEN_TERMINATE     /* Metatoken; Signifies end of token sequence */ 
 } TokenType;
 
 typedef struct LexerToken {
     TokenType type;
     void *value;
+    size_t original_tokenc; /* Original token size */
 } LexerToken;
 
 
@@ -41,3 +46,8 @@ LexerToken* tokenize(char *input);
     LexerToken* tokenize_floatliteral(char *input);
     LexerToken* tokenize_operator(char *input);
     LexerToken* tokenize_parens(char *input);
+
+
+char *tok2str(TokenType t);
+
+#endif // CALC_LEXER

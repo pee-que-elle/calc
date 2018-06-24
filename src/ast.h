@@ -3,6 +3,9 @@
  * made up of these nodes.
  */
 
+#ifndef CALC_AST
+#define CALC_AST
+
 #include <gmp.h> /* arbitrary precision numbers */
 #include <stdarg.h> /* varargs */
 
@@ -126,3 +129,4 @@ ASTNode_T *ASTNode(NodeType type, void *assoc);
         ASTNode_T *Float(mpf_t value);
         ASTNode_T *String(char *value);
 
+#endif // CALC_AST
