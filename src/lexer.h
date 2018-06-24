@@ -1,23 +1,12 @@
 #ifndef CALC_LEXER
 #define CALC_LEXER
 
+#define IGNORE_WHITESPACE 1
+
 #include "ast.h"
 
-static char *operators[] = {
-    "**",
-    "*",
-    "/",
-    "+",
-    "-",
-    "%"
-    "&",
-    "|",
-    "^",
-    "~",
-    "!"
-};
 
-typedef enum TokenType { 
+typedef enum TokenType {
     TOKEN_STRING,           /* String Literal */ 
     TOKEN_INT,              /* Int Literal */
     TOKEN_FLOAT,            /* Float Literal */

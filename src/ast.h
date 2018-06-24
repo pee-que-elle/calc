@@ -31,24 +31,46 @@ typedef enum NodeType {
     typedef enum OperatorType {
         OPERATOR_UNARY,
         OPERATOR_BINARY,
+        OPERATOR_AMBIGUOUS, /* Should only be for decisive purposes. Do not use this in an actual AST */
         OPERATOR_NONE
     } OperatorType;
         typedef enum UnaryOperatorType {
-            UNARYOPERATOR_NOT,
+            UNARYOPERATOR_BITWISENOT,
+            UNARYOPERATOR_LOGICALNOT,
             UNARYOPERATOR_SIGN,
             UNARYOPERATOR_FACTORIAL,
             UNARYOPERATOR_NONE
         } UnaryOperatorType;
         typedef enum BinaryOperatorType { 
+
+            /* Arithmetic */
             BINARYOPERATOR_ADDITION, 
             BINARYOPERATOR_SUBTRACTION, 
             BINARYOPERATOR_MULTIPLICATION,
             BINARYOPERATOR_DIVISION, 
             BINARYOPERATOR_EXPONENTIATION,
             BINARYOPERATOR_MODULATION,
-            BINARYOPERATOR_AND,
-            BINARYOPERATOR_OR,
-            BINARYOPERATOR_XOR,
+
+            /* Bitwise */
+            BINARYOPERATOR_BITWISEAND,
+            BINARYOPERATOR_BITWISEOR,
+            BINARYOPERATOR_BITWISEXOR,
+            BINARYOPERATOR_BITWISELEFTSHIFT,
+            BINARYOPERATOR_BITWISERIGHTSHIFT,
+
+            /* Logical */
+            BINARYOPERATOR_LOGICALAND,
+            BINARYOPERATOR_LOGICALOR,
+            BINARYOPERATOR_LOGICALXOR,
+            
+            /* Comparison */
+            BINARYOPERATOR_EQUALS,
+            BINARYOPERATOR_NOTEQUALS,
+            BINARYOPERATOR_GREATERTHAN,
+            BINARYOPERATOR_GREATEROREQUAL,
+            BINARYOPERATOR_LESSERTHAN,
+            BINARYOPERATOR_LESSERTHANOREQUAL,
+
             BINARYOPERATOR_NONE
         } BinaryOperatorType;
     typedef enum AbstractValueType {
@@ -129,4 +151,6 @@ ASTNode_T *ASTNode(NodeType type, void *assoc);
         ASTNode_T *Float(mpf_t value);
         ASTNode_T *String(char *value);
 
+/* helpers */
+OperatorType str2opertype(char *str);
 #endif // CALC_AST

@@ -1,4 +1,7 @@
 #include "lexer.h"
+
+#include "operator_defs.h"
+
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
@@ -32,6 +35,11 @@ LexerToken* lex(char* input)
 
     for(size_t i = 0, inputc = strlen(input); i < inputc;)
     {
+        #if IGNORE_WHITESPACE
+            while(isspace(input[i]) && input[i] != 0) i++;
+            if(input[i] == 0) break;
+        #endif // IGNORE_WHITESPACE
+
         LexerToken *current = tokenize(&input[i]);
         if(current == NULL || current->original_tokenc == 0)
         {
@@ -51,6 +59,9 @@ LexerToken* lex(char* input)
 
     free(terminator);
     return toks;
+
+    #undef REALLOC_TOKS
+    #undef APPEND_TOKS
 }
 
 LexerToken* tokenize(char *input)
@@ -63,12 +74,14 @@ LexerToken* tokenize(char *input)
     LexerToken *result = NULL;
     
     CHECK(tokenize_stringliteral);
+    CHECK(tokenize_floatliteral);
     CHECK(tokenize_intliteral);
-    // CHECK(tokenize_floatliteral);
     CHECK(tokenize_operator);
     
     printf("Did not pass check for '%s'\n", input); 
     return NULL;
+
+    #undef CHECK
 }
 
 LexerToken* tokenize_stringliteral(char *input)
@@ -109,9 +122,11 @@ LexerToken* tokenize_intliteral(char *input)
     CHECKBASE('o', 8);
     
     endbasecheck:
-    while(1)
+    while(1) 
     {
         char cur = input[basec+count];
+
+        if(cur == 0) break; /* not technically needed but might save some headaches */
         int status = 0;
 
         if(base <= 10) count += (status = (cur >= '0' && cur <= ('0' + base - 1) ));
@@ -129,15 +144,42 @@ LexerToken* tokenize_intliteral(char *input)
     mpz_t result_int;
     mpz_init_set_str(result_int, b, base);
 
-    LexerToken *result = create_filledtoken(TOKEN_INT, result_int, sizeof(result_int));
+    LexerToken *result = create_filledtoken(TOKEN_INT, result_int, sizeof result_int);
     result->original_tokenc = basec + count;
 
     return result;
+
+    #undef CHECKBASE
 }
 
 LexerToken* tokenize_floatliteral(char *input)
 {
-    return NULL;
+    int i, encountered_dot;
+    for(encountered_dot = 0, i = 0; input[i] != 0; i++)
+    {
+        char cur = input[i];
+        
+        if(cur == '.')
+        {
+            if(encountered_dot) return NULL;
+            encountered_dot = 1;
+        }
+        else if(!isdigit(cur)) return NULL;
+    }
+
+    if(!encountered_dot || input[i-1] == '.') return NULL;
+
+    char *f = malloc(i);
+    strncpy(f, input, i);
+    f[i] = 0;
+
+    mpf_t result_float;
+    mpf_init_set_str(result_float, f, 10);
+
+    LexerToken *result = create_filledtoken(TOKEN_FLOAT, result_float, sizeof result_float);
+    result->original_tokenc = i;
+
+    return result;
 }
 
 LexerToken* tokenize_operator(char *input)

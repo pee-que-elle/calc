@@ -2,6 +2,8 @@
 #include <string.h>
 #include "ast.h"
 
+#include "operator_defs.h"
+
 ASTNode_T *ASTNode(NodeType type, void *assoc)
 {
     ASTNode_T *n = malloc(sizeof(ASTNode_T));
@@ -115,4 +117,20 @@ ASTNode_T *Float(mpf_t value)
 ASTNode_T *String(char *value)
 {
     return AbstractValue(ABSTRACTVALUE_STRING, N_String(value));
+}
+
+OperatorType str2opertype(char *oper)
+{
+    #define INSET(strset, returntype)                               \
+        for(int i = 0; i < (sizeof strset/ sizeof *strset); ++i)    \
+        {                                                           \
+            if(strcmp(strset[i], oper) == 0) return returntype;     \
+        }
+
+    INSET(unary_operators, OPERATOR_UNARY);
+    INSET(binary_operators, OPERATOR_BINARY);
+    INSET(ambiguous_operators, OPERATOR_AMBIGUOUS);
+    return OPERATOR_NONE;
+
+    #undef INSET
 }
