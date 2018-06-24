@@ -72,7 +72,7 @@ LexerToken* tokenize(char *input)
         if(result != NULL) return result;
         
     LexerToken *result = NULL;
-    
+    CHECK(tokenize_comma);    
     CHECK(tokenize_parens);
     CHECK(tokenize_operator);
     CHECK(tokenize_intliteral);
@@ -231,7 +231,14 @@ LexerToken* tokenize_parens(char* input)
     }
     return result;
 }
+LexerToken* tokenize_comma(char *input)
+{
+    if(*input != ',') return NULL;
 
+    LexerToken *result = create_emptytoken(TOKEN_COMMA);
+    result->original_tokenc = 1;
+    return result;
+}
 
 char *toktype2str(TokenType t)
 {
@@ -249,6 +256,8 @@ char *toktype2str(TokenType t)
             return "lparen";
         case TOKEN_RPAREN:
             return "rparen";
+        case TOKEN_COMMA:
+            return "comma";
         case TOKEN_IDENTIFIER:
             return "identifier";
         case METATOKEN_TERMINATE:
@@ -259,15 +268,10 @@ char *toktype2str(TokenType t)
 
 char *tok2str(LexerToken *tok)
 {
+    #define CHAR2STR(c)         \
+        result = calloc(0, 2);  \
+        result[0] = c;
     char *result;
-
-    mp_exp_t exp;
-
-    mpz_t import_z;
-    mpf_t import_f;
-    
-    mpz_init(import_z);
-    mpf_init(import_f);
 
     switch(tok->type)
     {
@@ -280,9 +284,13 @@ char *tok2str(LexerToken *tok)
             strcpy(result, tok->value);
             break;
         case TOKEN_LPAREN:
+            CHAR2STR('(');
+            break;
         case TOKEN_RPAREN:
-            result = calloc(0, 2);
-            result[0] = tok->type == TOKEN_LPAREN ? '(' : ')';
+            CHAR2STR(')');
+            break;
+        case TOKEN_COMMA:
+            CHAR2STR(',');
             break;
     }
     return result;

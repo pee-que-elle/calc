@@ -13,7 +13,8 @@ typedef enum TokenType {
     TOKEN_OPERATOR,         /* Operator */
     TOKEN_LPAREN,           /* Left parenthesis, '(' */
     TOKEN_RPAREN,           /* Right parenthesis, ')' */
-    TOKEN_IDENTIFIER,
+    TOKEN_COMMA,            /* Comma; ',' */
+    TOKEN_IDENTIFIER,       /* identifier (function name, variable name, etc) */
     METATOKEN_TERMINATE     /* Metatoken; Signifies end of token sequence. might replace with linked list so no need for terminators anymore then */ 
 } TokenType;
 
@@ -36,6 +37,7 @@ LexerToken* tokenize(char *input);
     LexerToken* tokenize_floatliteral(char *input);
     LexerToken* tokenize_operator(char *input);
     LexerToken* tokenize_parens(char *input);
+    LexerToken* tokenize_comma(char *input);
     LexerToken* tokenize_identifier(char *input);
 
 
