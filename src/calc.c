@@ -2,7 +2,6 @@
 
 #include "ast.h"
 #include "lexer.h"
-#include "operator_defs.h"
 
 
 int main(unsigned argc, char** argv)

@@ -1,6 +1,6 @@
 #include "lexer.h"
 
-#include "operator_defs.h"
+#include "operator.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -181,7 +181,7 @@ LexerToken* tokenize_operator(char *input)
     for(int i = 0; i  < (sizeof operators/sizeof *operators); ++i)
     {
         
-        char *current = operators[i];
+        char *current = operators[i].identifier;
         size_t current_len = strlen(current);
         if(strncmp(current, input, current_len) == 0)
         {

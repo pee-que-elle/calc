@@ -9,76 +9,28 @@
 #include <gmp.h> /* arbitrary precision numbers */
 #include <stdarg.h> /* varargs */
 
+#include "operator.h"
+
 /* Forward decls */
 typedef struct ASTNode ASTNode_T;
     typedef struct Expression Expression_T;
     typedef struct FunctionCall FunctionCall_T;
-    typedef struct Operator Operator_T;
-        typedef struct UnaryOperator UnaryOperator_T;
-        typedef struct BinaryOperator BinaryOperator_T;
-    typedef struct AbstractValue AbstractValue_T;
-        typedef struct Integer Integer_T;
-        typedef struct Float Float_T;
-        typedef struct String String_T;
+    typedef struct UnaryOperator UnaryOperator_T;
+    typedef struct BinaryOperator BinaryOperator_T;
+    typedef struct Integer Integer_T;
+    typedef struct Float Float_T;
+    typedef struct String String_T;
 
 typedef enum NodeType {
     NODE_EXPRESSION,
     NODE_FUNCTIONCALL,
-    NODE_OPERATOR,
-    NODE_ABSTRACTVALUE,
+    NODE_UNARYOPERATOR,
+    NODE_BINARYOPERATOR,
+    NODE_STRING,
+    NODE_INTEGER,
+    NODE_FLOAT,
     NODE_NONE
 } NodeType;
-    typedef enum OperatorType {
-        OPERATOR_UNARY,
-        OPERATOR_BINARY,
-        OPERATOR_AMBIGUOUS, /* Should only be for decisive purposes. Do not use this in an actual AST */
-        OPERATOR_NONE
-    } OperatorType;
-        typedef enum UnaryOperatorType {
-            UNARYOPERATOR_BITWISENOT,
-            UNARYOPERATOR_LOGICALNOT,
-            UNARYOPERATOR_SIGN,
-            UNARYOPERATOR_FACTORIAL,
-            UNARYOPERATOR_NONE
-        } UnaryOperatorType;
-        typedef enum BinaryOperatorType { 
-
-            /* Arithmetic */
-            BINARYOPERATOR_ADDITION, 
-            BINARYOPERATOR_SUBTRACTION, 
-            BINARYOPERATOR_MULTIPLICATION,
-            BINARYOPERATOR_DIVISION, 
-            BINARYOPERATOR_EXPONENTIATION,
-            BINARYOPERATOR_MODULATION,
-
-            /* Bitwise */
-            BINARYOPERATOR_BITWISEAND,
-            BINARYOPERATOR_BITWISEOR,
-            BINARYOPERATOR_BITWISEXOR,
-            BINARYOPERATOR_BITWISELEFTSHIFT,
-            BINARYOPERATOR_BITWISERIGHTSHIFT,
-
-            /* Logical */
-            BINARYOPERATOR_LOGICALAND,
-            BINARYOPERATOR_LOGICALOR,
-            BINARYOPERATOR_LOGICALXOR,
-            
-            /* Comparison */
-            BINARYOPERATOR_EQUALS,
-            BINARYOPERATOR_NOTEQUALS,
-            BINARYOPERATOR_GREATERTHAN,
-            BINARYOPERATOR_GREATERTHANOREQUAL,
-            BINARYOPERATOR_LESSERTHAN,
-            BINARYOPERATOR_LESSERTHANOREQUAL,
-
-            BINARYOPERATOR_NONE
-        } BinaryOperatorType;
-    typedef enum AbstractValueType {
-        ABSTRACTVALUE_STRING,
-        ABSTRACTVALUE_INTEGER,
-        ABSTRACTVALUE_FLOAT,
-        ABSTRACTVALUE_NONE
-    } AbstractValueType;
 
 struct ASTNode {
     NodeType type;
@@ -94,28 +46,17 @@ struct FunctionCall {
     Expression_T **args;
 };
 
-struct Operator {
-    OperatorType type;
-    void *operator;
-};
-
 struct UnaryOperator {
-    /* ~x, -x, +x, x! */
-    UnaryOperatorType type;
+    /* ~x, -x, +x, x!, etc */
+    OperatorType type;
     Expression_T *operand;
 };
 
 struct BinaryOperator {
-
     /* x + y, x - y, x * y, x ^ y, x ** y, etc */
-    BinaryOperatorType type;
+    OperatorType type;
     Expression_T *lhand;
     Expression_T *rhand;
-};
-
-struct AbstractValue {
-    AbstractValueType type;
-    void *value;
 };
 
 struct Integer {
@@ -129,28 +70,11 @@ struct String {
 };
 
 ASTNode_T *ASTNode(NodeType type, void *assoc);
-    /* These generate the raw structs, not wrapped in an ASTNode */
-    Expression_T *N_Expression(ASTNode_T **nodes);
-    FunctionCall_T *N_FunctionCall(char* name, Expression_T **args);
-    Operator_T *N_Operator(OperatorType type, void *operator);
-        UnaryOperator_T *N_UnaryOperator(UnaryOperatorType type, Expression_T *operand);
-        BinaryOperator_T *N_BinaryOperator(BinaryOperatorType type, Expression_T *lhand, Expression_T *rhand);    
-    AbstractValue_T *N_AbstractValue(AbstractValueType type, void* value);
-        Integer_T *N_Integer(mpz_t value);
-        Float_T *N_Float(mpf_t value);
-        String_T *N_String(char *value);
-
-    /* These generate the wrapped versions */
     ASTNode_T *Expression(ASTNode_T **nodes);
     ASTNode_T *FunctionCall(char* name, Expression_T **args);
-    ASTNode_T *Operator(OperatorType type, void *operator);
-        ASTNode_T *UnaryOperator(UnaryOperatorType type, Expression_T *operand);
-        ASTNode_T *BinaryOperator(BinaryOperatorType type, Expression_T *lhand, Expression_T *rhand);    
-    ASTNode_T *AbstractValue(AbstractValueType type, void* value);
-        ASTNode_T *Integer(mpz_t value);
-        ASTNode_T *Float(mpf_t value);
-        ASTNode_T *String(char *value);
-
-/* helpers */
-OperatorType str2opertype(char *str);
+    ASTNode_T *UnaryOperator(OperatorType type, Expression_T *operand);
+    ASTNode_T *BinaryOperator(OperatorType type, Expression_T *lhand, Expression_T *rhand);    
+    ASTNode_T *Integer(mpz_t value);
+    ASTNode_T *Float(mpf_t value);
+    ASTNode_T *String(char *value);
 #endif // CALC_AST
