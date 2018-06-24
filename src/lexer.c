@@ -73,12 +73,12 @@ LexerToken* tokenize(char *input)
         
     LexerToken *result = NULL;
     
-    CHECK(tokenize_parens);    
+    CHECK(tokenize_parens);
+    CHECK(tokenize_operator);
+    CHECK(tokenize_intliteral);
     CHECK(tokenize_stringliteral);
     CHECK(tokenize_floatliteral);
-    CHECK(tokenize_intliteral);
-    CHECK(tokenize_operator);
-    
+    CHECK(tokenize_identifier);
     printf("Did not pass check for '%s'\n", input); 
     return NULL;
 
@@ -195,6 +195,27 @@ LexerToken* tokenize_operator(char *input)
     return NULL;
 }
 
+LexerToken *tokenize_identifier(char *input)
+{
+
+    int i;
+
+    for(i = 0; input[i] != 0; ++i)
+    {
+        
+        if(!(input[i] == '_' || isalpha(input[i]) || (i != 0 && isdigit(input[i]) )))
+        {
+            break;
+        }
+    }
+    if(i == 0) return NULL;
+    LexerToken *result = create_filledtoken(TOKEN_IDENTIFIER, input, i+1);
+    result->value[i] = 0;
+    result->original_tokenc = i;
+    return result;
+    
+}
+
 LexerToken* tokenize_parens(char* input)
 {
     LexerToken *result;
@@ -228,6 +249,8 @@ char *toktype2str(TokenType t)
             return "lparen";
         case TOKEN_RPAREN:
             return "rparen";
+        case TOKEN_IDENTIFIER:
+            return "identifier";
         case METATOKEN_TERMINATE:
             return "terminate";
         default: return "????";
@@ -252,6 +275,7 @@ char *tok2str(LexerToken *tok)
         case TOKEN_INT:
         case TOKEN_FLOAT:
         case TOKEN_OPERATOR:
+        case TOKEN_IDENTIFIER:
             result = malloc(strlen(tok->value)+1);
             strcpy(result, tok->value);
             break;

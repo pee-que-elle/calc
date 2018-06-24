@@ -13,7 +13,8 @@ typedef enum TokenType {
     TOKEN_OPERATOR,         /* Operator */
     TOKEN_LPAREN,           /* Left parenthesis, '(' */
     TOKEN_RPAREN,           /* Right parenthesis, ')' */
-    METATOKEN_TERMINATE     /* Metatoken; Signifies end of token sequence */ 
+    TOKEN_IDENTIFIER,
+    METATOKEN_TERMINATE     /* Metatoken; Signifies end of token sequence. might replace with linked list so no need for terminators anymore then */ 
 } TokenType;
 
 typedef struct LexerToken {
@@ -35,6 +36,7 @@ LexerToken* tokenize(char *input);
     LexerToken* tokenize_floatliteral(char *input);
     LexerToken* tokenize_operator(char *input);
     LexerToken* tokenize_parens(char *input);
+    LexerToken* tokenize_identifier(char *input);
 
 
 char *toktype2str(TokenType t);
