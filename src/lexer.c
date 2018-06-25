@@ -178,21 +178,26 @@ LexerToken* tokenize_floatliteral(char *input)
 
 LexerToken* tokenize_operator(char *input)
 {
+    char *touse = calloc(0,1);
     for(int i = 0; i  < (sizeof operators/sizeof *operators); ++i)
     {
         
         char *current = operators[i].identifier;
         size_t current_len = strlen(current);
-        if(strncmp(current, input, current_len) == 0)
+        if(strncmp(current, input, current_len) == 0 && current_len > strlen(touse))
         {
             /* Fill value so we don't have to do a lookup when pretty-printing later */
-            LexerToken* result = create_filledtoken(TOKEN_OPERATOR, current, current_len+1);
-            result->value[current_len] = 0;
-            result->original_tokenc = current_len;
-            return result;
+            touse = realloc(touse, current_len + 1);
+            strcpy(touse, current);
         }
     }
-    return NULL;
+    if(touse[0] == 0) return NULL;
+    
+    size_t touse_len = strlen(touse);
+    LexerToken* result = create_filledtoken(TOKEN_OPERATOR, touse, touse_len+1);
+    result->value[touse_len] = 0;
+    result->original_tokenc = touse_len;
+    return result;
 }
 
 LexerToken *tokenize_identifier(char *input)

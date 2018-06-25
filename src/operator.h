@@ -72,7 +72,7 @@ typedef struct Operator {
 
 } Operator_T;
 
-#define O(i,p,t,o,a) {i, p, OPERATOR_##t, a}
+#define O(i,p,t,o,a) {i, p, OPERATOR_##t, OPERATORARITY_##o, a}
 
 #define RIGHT OPERATORASSOC_RIGHT
 #define LEFT OPERATORASSOC_LEFT
