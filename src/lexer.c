@@ -75,9 +75,10 @@ LexerToken* tokenize(char *input)
     CHECK(tokenize_comma);    
     CHECK(tokenize_parens);
     CHECK(tokenize_operator);
+
+    CHECK(tokenize_floatliteral);
     CHECK(tokenize_intliteral);
     CHECK(tokenize_stringliteral);
-    CHECK(tokenize_floatliteral);
     CHECK(tokenize_identifier);
     printf("Did not pass check for '%s'\n", input); 
     return NULL;
@@ -162,7 +163,7 @@ LexerToken* tokenize_floatliteral(char *input)
             if(encountered_dot) return NULL;
             encountered_dot = 1;
         }
-        else if(!isdigit(cur)) return NULL;
+        else if(!isdigit(cur)) break;
     }
 
     if(!encountered_dot || input[i-1] == '.') return NULL;

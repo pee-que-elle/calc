@@ -1,6 +1,8 @@
 #ifndef CALC_OPERATOR
 #define CALC_OPERATOR
 
+#include "linkedlist.h"
+
 typedef enum OperatorArity {
     OPERATORARITY_UNARY,
     OPERATORARITY_BINARY,
@@ -107,5 +109,8 @@ static Operator_T operators[] = {
     O("^^", 11, LOGICALXOR         , BINARY, LEFT),
     O("||", 12, LOGICALOR          , BINARY, LEFT)
 };
+
+
+LinkedList_T *match_operator_by_criteria(char *identifier, int precedence, OperatorType type, OperatorArity arity, int arity_specific_value);
 
 #endif //CALC_OPERATOR
