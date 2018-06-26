@@ -2,41 +2,51 @@
 #include <string.h>
 #include <stdlib.h>
 
-LinkedList_T *create_emptyll()
+
+
+LinkedList_T *ll_set_copy(LinkedList_T *original, void *value, size_t nbytes)
+{
+    original->value = malloc(nbytes);
+    memcpy(original->value, value, nbytes);
+    original->dynamically_allocated = 1;
+    return original;
+}
+
+LinkedList_T *ll_set_nocopy(LinkedList_T *original, void *value, int dynamically_allocated)
+{
+    original->value = value;
+    original->dynamically_allocated = dynamically_allocated;
+    return original;
+}
+
+LinkedList_T *ll_create_empty()
 {
     LinkedList_T * l = malloc(sizeof(LinkedList_T));
     l->value = NULL;
     l->next = NULL;
-    l->is_dynamically_allocated = 0;
+    l->dynamically_allocated = 0;
     return l;
 }
 
 
-LinkedList_T *create_filledll_copy(void *value, size_t nbytes)
+LinkedList_T *ll_create_filled_copy(void *value, size_t nbytes)
 {
-    LinkedList_T *l = create_emptyll();
-    l->is_dynamically_allocated = 1;
+    return ll_set_copy(ll_create_empty(), value, nbytes);
 
-    l->value = malloc(nbytes);
-    memcpy(l->value, value, nbytes);
-    return l;
 }
 
-LinkedList_T *create_filledll_nocopy(void *value, int is_dynamically_allocated)
+LinkedList_T *ll_create_filled_nocopy(void *value, int dynamically_allocated)
 {
-    LinkedList_T *l = create_emptyll();
-    l->value = value;
-    l->is_dynamically_allocated = is_dynamically_allocated;
-    return l;
+    return ll_set_nocopy(ll_create_empty(), value, dynamically_allocated);
 }
 
-LinkedList_T *append_llnode(LinkedList_T *original, LinkedList_T *toappend)
+LinkedList_T *ll_append(LinkedList_T *original, LinkedList_T *toappend)
 {
    original->next = toappend; 
    return original->next;
 }
 
-void free_ll(LinkedList_T *tofree)
+void ll_free(LinkedList_T *tofree)
 {
     LinkedList_T *temp;
     LinkedList_T *current = tofree;
@@ -45,7 +55,7 @@ void free_ll(LinkedList_T *tofree)
     {
         temp = current;
 
-        if(current->is_dynamically_allocated) free(current->value);
+        if(current->dynamically_allocated) free(current->value);
     
         if(current->next == NULL)
         {
@@ -57,7 +67,7 @@ void free_ll(LinkedList_T *tofree)
     }
 }
 
-size_t get_llsize(LinkedList_T *l)
+size_t ll_size(LinkedList_T *l)
 {
     LinkedList_T *current = l;
     size_t c = 1;

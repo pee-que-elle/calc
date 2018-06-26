@@ -4,7 +4,7 @@
 
 LinkedList_T *match_operator_by_criteria(char *identifier, int precedence, OperatorType type, OperatorArity arity, int arity_specific_value)
 {
-    LinkedList_T *matches = create_emptyll();
+    LinkedList_T *matches = ll_create_empty();
     
     LinkedList_T *current = matches;
 
@@ -22,7 +22,7 @@ LinkedList_T *match_operator_by_criteria(char *identifier, int precedence, Opera
               )
           )
         {
-            current = append_llnode(current, create_filledll_nocopy(currentoper, 0));
+            current = ll_append(ll_set_nocopy(current, currentoper, 0), ll_create_empty());
         }
     }
     return matches;

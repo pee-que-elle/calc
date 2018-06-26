@@ -28,7 +28,7 @@ LexerToken_T* create_filledtoken(TokenType type, void* value, size_t n)
 
 LinkedList_T* lex(char* input)
 {
-    LinkedList_T* toks = create_emptyll();
+    LinkedList_T* toks = ll_create_empty();
     LinkedList_T *current_node = toks;
 
     size_t tokc = 0;
@@ -43,16 +43,13 @@ LinkedList_T* lex(char* input)
         LexerToken_T *current_token = tokenize(&input[i]);
         if(current_token == NULL || current_token->original_tokenc == 0)
         {
-            free_ll(toks);
+            ll_free(toks);
             return NULL;
         }
         
         i += current_token->original_tokenc;
         
-        current_node->value = malloc(sizeof *current_token);
-        memcpy(current_node->value, current_token, sizeof *current_token);
-
-        current_node = append_llnode(current_node, create_emptyll());
+        current_node = ll_append(ll_set_copy(current_node, current_token, sizeof *current_token), ll_create_empty());
          
         free(current_token);
     }

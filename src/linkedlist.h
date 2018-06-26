@@ -8,14 +8,20 @@ typedef struct LinkedList LinkedList_T;
 struct LinkedList {
     void *value;
     LinkedList_T *next;
-    int is_dynamically_allocated;
+    int dynamically_allocated;
 };
 
 
-LinkedList_T *create_emptyll();
-LinkedList_T *create_filledll_copy(void *value, size_t nbytes);
-LinkedList_T *create_filledll_nocopy(void *value, int is_dynamically_allocated);
-LinkedList_T *append_llnode(LinkedList_T *original, LinkedList_T *toappend);
-void free_ll(LinkedList_T *tofree);
-size_t get_llsize(LinkedList_T *l);
+LinkedList_T *ll_set_copy(LinkedList_T *original, void *value, size_t nbytes);
+LinkedList_T *ll_set_nocopy(LinkedList_T *original, void *value, int dynamically_allocated);
+
+LinkedList_T *ll_create_empty();
+LinkedList_T *ll_create_filled_copy(void *value, size_t nbytes);
+LinkedList_T *ll_create_filled_nocopy(void *value, int is_dynamically_allocated);
+LinkedList_T *ll_append(LinkedList_T *original, LinkedList_T *toappend);
+
+
+
+void ll_free(LinkedList_T *tofree);
+size_t ll_size(LinkedList_T *l);
 #endif // CALC_LINKEDLIST
