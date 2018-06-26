@@ -1,5 +1,5 @@
 #include "lexer.h"
-
+#include "linkedlist.h"
 #include "operator.h"
 
 #include <stdlib.h>
@@ -26,11 +26,11 @@ LexerToken_T* create_filledtoken(TokenType type, void* value, size_t n)
     return tok;
 }
 
-LexerToken_T* lex(char* input)
+LinkedList_T* lex(char* input)
 {
-    #define REALLOC_TOKS(c) c = realloc(c, sizeof(LexerToken_T) * ++tokc)
-    #define APPEND_TOKS(ts, t) memcpy(&ts[tokc-1], t, sizeof(LexerToken_T))
-    LexerToken_T* toks = malloc(0);
+    LinkedList_T* toks = create_emptyll();
+    LinkedList_T *current_node = toks;
+
     size_t tokc = 0;
 
     for(size_t i = 0, inputc = strlen(input); i < inputc;)
@@ -40,28 +40,25 @@ LexerToken_T* lex(char* input)
             if(input[i] == 0) break;
         #endif // IGNORE_WHITESPACE
 
-        LexerToken_T *current = tokenize(&input[i]);
-        if(current == NULL || current->original_tokenc == 0)
+        LexerToken_T *current_token = tokenize(&input[i]);
+        if(current_token == NULL || current_token->original_tokenc == 0)
         {
-            free(toks);
+            free_ll(toks);
             return NULL;
         }
-        REALLOC_TOKS(toks);
-        APPEND_TOKS(toks, current);
         
-        i += current->original_tokenc;
-        free(current);
+        i += current_token->original_tokenc;
+        
+        current_node->value = malloc(sizeof *current_token);
+        memcpy(current_node->value, current_token, sizeof *current_token);
+
+        current_node = append_llnode(current_node, create_emptyll());
+         
+        free(current_token);
     }
-    REALLOC_TOKS(toks);
-    LexerToken_T *terminator = create_emptytoken(METATOKEN_TERMINATE);
-    
-    APPEND_TOKS(toks, terminator);
-
-    free(terminator);
+    current_node->next = NULL;
+    current_node->value = NULL; /* these 2 should be nulled already but whatever */
     return toks;
-
-    #undef REALLOC_TOKS
-    #undef APPEND_TOKS
 }
 
 LexerToken_T* tokenize(char *input)
@@ -266,8 +263,6 @@ char *toktype2str(TokenType t)
             return "comma";
         case TOKEN_IDENTIFIER:
             return "identifier";
-        case METATOKEN_TERMINATE:
-            return "terminate";
         default: return "????";
    } 
 }

@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include "linkedlist.h"
 
 #include "ast.h"
 #include "lexer.h"
@@ -6,13 +7,16 @@
 
 int main(unsigned argc, char** argv)
 {
-    LexerToken_T *t = lex(argv[1]);
-
-    if(t == NULL) return 1;
-
-    for(int i = 0; t[i].type != METATOKEN_TERMINATE; ++i)
+    LinkedList_T *t = lex(argv[1]);
+    LinkedList_T *current = t;
+    while(1)
     {
-        printf("(%s '%s') ", toktype2str(t[i].type), tok2str(&t[i]));
+        if(current->value == NULL) break;
+        LexerToken_T *t = (LexerToken_T*)current->value;
+        printf("(%s '%s') ", toktype2str(t->type), tok2str(t)); 
+        current = current->next;
     }
+
+
     putchar('\n');
 }

@@ -15,8 +15,9 @@ LinkedList_T *create_emptyll()
 LinkedList_T *create_filledll_copy(void *value, size_t nbytes)
 {
     LinkedList_T *l = create_emptyll();
-    l->value = malloc(nbytes);
     l->is_dynamically_allocated = 1;
+
+    l->value = malloc(nbytes);
     memcpy(l->value, value, nbytes);
     return l;
 }
@@ -54,6 +55,18 @@ void free_ll(LinkedList_T *tofree)
         current = current->next;
         free(temp);
     }
+}
+
+size_t get_llsize(LinkedList_T *l)
+{
+    LinkedList_T *current = l;
+    size_t c = 1;
+    while(current->next != NULL)
+    {
+        c++;
+        current = current->next;
+    }
+    return c;
 }
 
 /*

@@ -4,7 +4,7 @@
 #define IGNORE_WHITESPACE 1
 
 #include "ast.h"
-
+#include "linkedlist.h"
 
 typedef enum TokenType {
     TOKEN_STRING,           /* String Literal */ 
@@ -14,8 +14,7 @@ typedef enum TokenType {
     TOKEN_LPAREN,           /* Left parenthesis, '(' */
     TOKEN_RPAREN,           /* Right parenthesis, ')' */
     TOKEN_COMMA,            /* Comma; ',' */
-    TOKEN_IDENTIFIER,       /* identifier (function name, variable name, etc) */
-    METATOKEN_TERMINATE     /* Metatoken; Signifies end of token sequence. might replace with linked list so no need for terminators anymore then */ 
+    TOKEN_IDENTIFIER       /* identifier (function name, variable name, etc) */
 } TokenType;
 
 typedef struct LexerToken {
@@ -27,7 +26,8 @@ typedef struct LexerToken {
 
 LexerToken_T* create_emptytoken(TokenType type);
 LexerToken_T* create_filledtoken(TokenType type, void *value, size_t n); 
-LexerToken_T* lex(char *input);
+
+LinkedList_T* lex(char *input);
 
 LexerToken_T* tokenize(char *input);
     
