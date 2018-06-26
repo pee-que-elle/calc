@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "ast.h"
-
+#include "linkedlist.h"
 #include "operator.h"
 
 ASTNode_T *ASTNode(NodeType type, void *assoc)
@@ -10,6 +10,11 @@ ASTNode_T *ASTNode(NodeType type, void *assoc)
     n->type = type;
     n->assoc = assoc;
     return n;
+}
+
+ASTNode_T *Expression(LinkedList_T *nodes)
+{
+
 }
 
 ASTNode_T *UnaryOperator(OperatorType type, Expression_T *operand)

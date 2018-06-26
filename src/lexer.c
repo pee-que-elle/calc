@@ -8,29 +8,29 @@
 #include <stdio.h>
 #include <gmp.h>
 
-LexerToken* create_emptytoken(TokenType type)
+LexerToken_T* create_emptytoken(TokenType type)
 {
-    LexerToken *tok = malloc(sizeof(LexerToken));
+    LexerToken_T *tok = malloc(sizeof(LexerToken_T));
     tok->type = type;
     tok->value = NULL;
     tok->original_tokenc = 0; /* throw error if still equals zero later */
     return tok;
 
 }
-LexerToken* create_filledtoken(TokenType type, void* value, size_t n)
+LexerToken_T* create_filledtoken(TokenType type, void* value, size_t n)
 {
     /* creates a token from a null-terminated string */
-    LexerToken *tok = create_emptytoken(type);
+    LexerToken_T *tok = create_emptytoken(type);
     tok->value = malloc(n);
     strncpy(tok->value, value, n);
     return tok;
 }
 
-LexerToken* lex(char* input)
+LexerToken_T* lex(char* input)
 {
-    #define REALLOC_TOKS(c) c = realloc(c, sizeof(LexerToken) * ++tokc)
-    #define APPEND_TOKS(ts, t) memcpy(&ts[tokc-1], t, sizeof(LexerToken))
-    LexerToken* toks = malloc(0);
+    #define REALLOC_TOKS(c) c = realloc(c, sizeof(LexerToken_T) * ++tokc)
+    #define APPEND_TOKS(ts, t) memcpy(&ts[tokc-1], t, sizeof(LexerToken_T))
+    LexerToken_T* toks = malloc(0);
     size_t tokc = 0;
 
     for(size_t i = 0, inputc = strlen(input); i < inputc;)
@@ -40,7 +40,7 @@ LexerToken* lex(char* input)
             if(input[i] == 0) break;
         #endif // IGNORE_WHITESPACE
 
-        LexerToken *current = tokenize(&input[i]);
+        LexerToken_T *current = tokenize(&input[i]);
         if(current == NULL || current->original_tokenc == 0)
         {
             free(toks);
@@ -53,7 +53,7 @@ LexerToken* lex(char* input)
         free(current);
     }
     REALLOC_TOKS(toks);
-    LexerToken *terminator = create_emptytoken(METATOKEN_TERMINATE);
+    LexerToken_T *terminator = create_emptytoken(METATOKEN_TERMINATE);
     
     APPEND_TOKS(toks, terminator);
 
@@ -64,14 +64,14 @@ LexerToken* lex(char* input)
     #undef APPEND_TOKS
 }
 
-LexerToken* tokenize(char *input)
+LexerToken_T* tokenize(char *input)
 {
 
     #define CHECK(x)                        \
         result = x(input);                  \
         if(result != NULL) return result;
         
-    LexerToken *result = NULL;
+    LexerToken_T *result = NULL;
     CHECK(tokenize_comma);    
     CHECK(tokenize_parens);
     CHECK(tokenize_operator);
@@ -86,7 +86,7 @@ LexerToken* tokenize(char *input)
     #undef CHECK
 }
 
-LexerToken* tokenize_stringliteral(char *input)
+LexerToken_T* tokenize_stringliteral(char *input)
 {
     if(input[0] != '"') return NULL;
 
@@ -96,7 +96,7 @@ LexerToken* tokenize_stringliteral(char *input)
         {
             /* string content range is [1, i-1], length is i - 2 */
             size_t len = i - 2;
-            LexerToken *result = create_filledtoken(TOKEN_STRING, &result[1], len+1);
+            LexerToken_T *result = create_filledtoken(TOKEN_STRING, &result[1], len+1);
             result->value[len] = 0; /* null-terminate string properly */
             result->original_tokenc = len + 2; 
             return result;
@@ -105,7 +105,7 @@ LexerToken* tokenize_stringliteral(char *input)
     return NULL; /* Reached end of input withput encountering a '"' */
 }
 
-LexerToken* tokenize_intliteral(char *input)
+LexerToken_T* tokenize_intliteral(char *input)
 {
     #define CHECKBASE(c, b)                     \
         if(input[1] == c && input[0] == '0')    \
@@ -140,7 +140,7 @@ LexerToken* tokenize_intliteral(char *input)
 
     if(count == 0) return NULL;
 
-    LexerToken *result = create_filledtoken(TOKEN_INT, input, basec+count+1);
+    LexerToken_T *result = create_filledtoken(TOKEN_INT, input, basec+count+1);
 
     result->value[basec+count] = 0;
 
@@ -151,7 +151,7 @@ LexerToken* tokenize_intliteral(char *input)
     #undef CHECKBASE
 }
 
-LexerToken* tokenize_floatliteral(char *input)
+LexerToken_T* tokenize_floatliteral(char *input)
 {
     int i, encountered_dot;
     for(encountered_dot = 0, i = 0; input[i] != 0; i++)
@@ -169,7 +169,7 @@ LexerToken* tokenize_floatliteral(char *input)
     if(!encountered_dot || input[i-1] == '.') return NULL;
 
     
-    LexerToken *result = create_filledtoken(TOKEN_FLOAT, input, i+1);
+    LexerToken_T *result = create_filledtoken(TOKEN_FLOAT, input, i+1);
     result->value[i] = 0;
 
     result->original_tokenc = i;
@@ -177,7 +177,7 @@ LexerToken* tokenize_floatliteral(char *input)
     return result;
 }
 
-LexerToken* tokenize_operator(char *input)
+LexerToken_T* tokenize_operator(char *input)
 {
     char *touse = calloc(0,1);
     for(int i = 0; i  < (sizeof operators/sizeof *operators); ++i)
@@ -195,13 +195,13 @@ LexerToken* tokenize_operator(char *input)
     if(touse[0] == 0) return NULL;
     
     size_t touse_len = strlen(touse);
-    LexerToken* result = create_filledtoken(TOKEN_OPERATOR, touse, touse_len+1);
+    LexerToken_T* result = create_filledtoken(TOKEN_OPERATOR, touse, touse_len+1);
     result->value[touse_len] = 0;
     result->original_tokenc = touse_len;
     return result;
 }
 
-LexerToken *tokenize_identifier(char *input)
+LexerToken_T *tokenize_identifier(char *input)
 {
 
     int i;
@@ -215,16 +215,16 @@ LexerToken *tokenize_identifier(char *input)
         }
     }
     if(i == 0) return NULL;
-    LexerToken *result = create_filledtoken(TOKEN_IDENTIFIER, input, i+1);
+    LexerToken_T *result = create_filledtoken(TOKEN_IDENTIFIER, input, i+1);
     result->value[i] = 0;
     result->original_tokenc = i;
     return result;
     
 }
 
-LexerToken* tokenize_parens(char* input)
+LexerToken_T* tokenize_parens(char* input)
 {
-    LexerToken *result;
+    LexerToken_T *result;
     switch(*input)
     {
         case '(' :
@@ -237,11 +237,11 @@ LexerToken* tokenize_parens(char* input)
     }
     return result;
 }
-LexerToken* tokenize_comma(char *input)
+LexerToken_T* tokenize_comma(char *input)
 {
     if(*input != ',') return NULL;
 
-    LexerToken *result = create_emptytoken(TOKEN_COMMA);
+    LexerToken_T *result = create_emptytoken(TOKEN_COMMA);
     result->original_tokenc = 1;
     return result;
 }
@@ -272,7 +272,7 @@ char *toktype2str(TokenType t)
    } 
 }
 
-char *tok2str(LexerToken *tok)
+char *tok2str(LexerToken_T *tok)
 {
     #define CHAR2STR(c)         \
         result = calloc(0, 2);  \

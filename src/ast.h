@@ -10,6 +10,7 @@
 #include <stdarg.h> /* varargs */
 
 #include "operator.h"
+#include "linkedlist.h"
 
 /* Forward decls */
 typedef struct ASTNode ASTNode_T;
@@ -43,7 +44,7 @@ struct Expression {
 
 struct FunctionCall {
     char* name;
-    Expression_T **args;
+    LinkedList_T args;
 };
 
 struct UnaryOperator {
@@ -70,8 +71,8 @@ struct String {
 };
 
 ASTNode_T *ASTNode(NodeType type, void *assoc);
-    ASTNode_T *Expression(ASTNode_T **nodes);
-    ASTNode_T *FunctionCall(char* name, Expression_T **args);
+    ASTNode_T *Expression(LinkedList_T *nodes);
+    ASTNode_T *FunctionCall(char* name, LinkedList_T *args);
     ASTNode_T *UnaryOperator(OperatorType type, Expression_T *operand);
     ASTNode_T *BinaryOperator(OperatorType type, Expression_T *lhand, Expression_T *rhand);    
     ASTNode_T *Integer(mpz_t value);

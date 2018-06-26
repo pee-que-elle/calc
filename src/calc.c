@@ -6,7 +6,7 @@
 
 int main(unsigned argc, char** argv)
 {
-    LexerToken *t = lex(argv[1]);
+    LexerToken_T *t = lex(argv[1]);
 
     if(t == NULL) return 1;
 
