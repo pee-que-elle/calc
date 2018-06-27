@@ -14,15 +14,16 @@ LinkedList_T *match_operator_by_criteria(char *identifier, int precedence, Opera
         if(
               (identifier == NULL          || strcmp(identifier, currentoper->identifier) == 0) &&
               (precedence == -1            || precedence == currentoper->precedence) &&
+              (type == OPERATOR_NONE || type == currentoper->type) &&
               (arity == OPERATORARITY_NONE || 
                 ((arity == currentoper->arity) &&
                     (arity == OPERATORARITY_UNARY && (UnaryOperatorAffix)arity_specific_value == currentoper->affix) ||
                     (arity == OPERATORARITY_BINARY && (BinaryOperatorAssociativity)arity_specific_value == currentoper->associativity)
-                )
+                 )
               )
           )
         {
-            current = ll_append(ll_set_nocopy(current, currentoper, 0), ll_create_empty());
+            current = ll_append(ll_set_copy(current, currentoper, sizeof(Operator_T)), ll_create_empty());
         }
     }
     return matches;

@@ -17,20 +17,20 @@ ASTNode_T *Expression(LinkedList_T *nodes)
 
 }
 
-ASTNode_T *UnaryOperator(OperatorType type, Expression_T *operand)
+ASTNode_T *UnaryOperator(Operator_T *operator, Expression_T *operand)
 {
 
     UnaryOperator_T *o = malloc(sizeof(UnaryOperator_T));
-    o->type = type;
+    o->operator = operator;
     o->operand = operand;
     return ASTNode(NODE_UNARYOPERATOR, o);
 }
 
-ASTNode_T *BinaryOperator(OperatorType type, Expression_T *lhand, Expression_T *rhand)
+ASTNode_T *BinaryOperator(Operator_T *operator, Expression_T *lhand, Expression_T *rhand)
 {
     
     BinaryOperator_T *o = malloc(sizeof(BinaryOperator_T));
-    o->type = type;
+    o->operator = operator;
     o->lhand = lhand;
     o->rhand = rhand;
     return ASTNode(NODE_BINARYOPERATOR, o);
@@ -60,4 +60,11 @@ ASTNode_T *String(char *value)
     String_T *o = malloc(sizeof(String_T));
     o->value = value;
     return ASTNode(NODE_STRING, o);
+}
+
+ASTNode_T *Identifier(char *value)
+{
+    Identifier_T *o = malloc(sizeof(Identifier_T));
+    o->identifier = value;
+    return ASTNode(NODE_IDENTIFIER, o);
 }

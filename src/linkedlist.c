@@ -2,8 +2,6 @@
 #include <string.h>
 #include <stdlib.h>
 
-
-
 LinkedList_T *ll_set_copy(LinkedList_T *original, void *value, size_t nbytes)
 {
     original->value = malloc(nbytes);
@@ -57,7 +55,7 @@ void ll_free(LinkedList_T *tofree)
 
         if(current->dynamically_allocated) free(current->value);
     
-        if(current->next == NULL)
+        if(current->value == NULL)
         {
             free(current);
             break;
@@ -71,12 +69,29 @@ size_t ll_size(LinkedList_T *l)
 {
     LinkedList_T *current = l;
     size_t c = 1;
-    while(current->next != NULL)
+    while(current->value != NULL)
     {
         c++;
         current = current->next;
     }
     return c;
+}
+
+void **ll_to_array(LinkedList_T *original)
+{
+    void **result = malloc(0);
+    LinkedList_T *current = original;
+
+    size_t nodec = 0;
+    while(1)
+    {
+        result = realloc(result, sizeof(void*) * ++nodec);
+        result[nodec-1] = current->value; /* should automagically NULL terminate */
+
+        if(current->value == NULL) break;
+        current = current->next;
+    }
+    return result;
 }
 
 /*
