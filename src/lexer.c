@@ -240,6 +240,17 @@ LexerToken_T* tokenize_comma(char *input)
     return result;
 }
 
+
+void lexer_advance(Lexer_T *lexer)
+{
+   lexer->current =  lexer->current->next;
+}
+
+LexerToken_T *lexer_current(Lexer_T *lexer)
+{
+    return (LexerToken_T*)lexer->current->value;
+}
+
 char *toktype2str(TokenType t)
 {
    switch(t)
@@ -292,4 +303,31 @@ char *tok2str(LexerToken_T *tok)
             break;
     }
     return result;
+}
+
+int tokisoperatable(TokenType t)
+{
+    switch(t)
+    {
+        case TOKEN_STRING:
+        case TOKEN_INT:
+        case TOKEN_FLOAT:
+        case TOKEN_LPAREN:
+        case TOKEN_IDENTIFIER:
+            return 1;
+        default: return 0;
+
+    }
+}
+
+int tokisnotoperatable(TokenType t)
+{
+    switch(t)
+    {
+        case TOKEN_COMMA:
+        case TOKEN_RPAREN:
+        case TOKEN_OPERATOR:
+            return 1;
+        default: return 0;
+    }
 }

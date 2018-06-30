@@ -3,84 +3,213 @@
 #include <stdio.h>
 #include <string.h>
 
-ASTNode_T *parse(LinkedList_T *ll_tokens)
+#include <stdint.h>
+
+ASTNode_T *parse(LinkedList_T *tokens)
 {
-    LexerToken_T **tokens = (LexerToken_T**)ll_to_array(ll_tokens);
-    
-    return fill_opers(parse_tokenstream(tokens));
-    
+    Lexer_T *lexer = malloc(sizeof(Lexer_T));
+    lexer->current = tokens;
+
+    return parse_expr(lexer, (int)((uint32_t)-1));
 }
 
-ASTNode_T *fill_opers(ASTNode_T *tree)
+ASTNode_T *parse_atom(Lexer_T *lexer)
 {
-    if(tree->type != NODE_EXPRESSION) return NULL;
-
-    ASTNode_T **nodes = (ASTNode_T**)ll_to_array(((Expression_T*)(tree->assoc))->expr);
-
-    for(int i = 0; nodes[i] != NULL; i++)
+    LexerToken_T *cur = lexer_current(lexer);
+    
+    if(cur->type == TOKEN_LPAREN)
     {
-        ASTNode_T *node = nodes[i];
-        if(node->type == NODE_OPERATOR_PLACEHOLDER)
+        lexer_advance(lexer);
+
+    }
+    else if(cur->type == TOKEN_IDENTIFIER)
+    {
+        ASTNode_T *identifier = Identifier(cur->value);
+        lexer_advance(lexer);
+           
+        if(lexer_current(lexer)->type == TOKEN_LPAREN)
         {
-            char *identifier = ((Operator_T*)(node->assoc))->identifier;
+            lexer_advance(lexer);
             
-            LinkedList_T *matching_operators = match_operator_by_criteria(
-                    identifier, 
-                    -1,
-                    OPERATOR_NONE,
-                    OPERATORARITY_NONE,
-                    0);
+            LinkedList_T *params = ll_create_empty();
+            LinkedList_T *current_param = params;
 
-            size_t matchc = ll_size(matching_operators);
-
-            if(matchc == 0)
+            while(1)
             {
-                printf("Something has gone wrong\n");
-                return NULL;
+                ll_set_nocopy(current_param, parse_expr(lexer, 1), 1, sizeof(ASTNode_T));
+                
+                if(current_param->value == NULL) return NULL;
+
+                current_param = ll_append(current_param, ll_create_empty());
+                cur = lexer_current(lexer);
+
+                if(cur->type == TOKEN_COMMA)
+                {
+                    lexer_advance(lexer);
+                }
+                else if(cur->type == TOKEN_RPAREN)
+                {
+                    break;
+                }
+                else
+                {
+                    printf("Unexpected token '%s'", toktype2str(cur->type));
+                    return NULL;
+                }
+
             }
+            return FunctionCall(identifier, params);
         }
+
+        else
+        {
+            return identifier;
+        }
+    }
+    else if(cur->type == TOKEN_STRING)
+    {
+        return String(cur->value);
+    }
+
+    else if(cur->type == TOKEN_FLOAT)
+    {
+        mpf_t f;
+        mpf_init(f);
+        tokenfloat2mpf(f, cur->value);
+        return Float(f);
+    }
+
+    else if(cur->type == TOKEN_INT)
+    {
+        mpz_t i;
+        mpz_init(i);
+        tokenint2mpz(i, cur->value);
+        return Integer(i);
     }
 }
 
-ASTNode_T *parse_tokenstream(LexerToken_T **tokens)
+ASTNode_T *parse_expr(Lexer_T *lexer, int max_prec)
 {
-    /* Create non-nested AST for further evauluation */
-    LinkedList_T *astnodes = ll_create_empty();
-    LinkedList_T *current = astnodes;
+    ASTNode_T *lhand = parse_atom(lexer);
     
-    for(int i = 0; tokens[i] != NULL; ++i)
+    ASTNode_T *rhand = NULL;
+
+    size_t next_max_prec = max_prec;
+
+    while(1)
     {
-       LexerToken_T *token = tokens[i]; 
-       Operator_T *oper;
-       switch(token->type)
-       {
-            case TOKEN_STRING:
-                current = ll_append(current, ll_create_filled_nocopy(String(token->value), 1));
-                break;
-            case TOKEN_IDENTIFIER:
-                current = ll_append(current, ll_create_filled_nocopy(Identifier(token->value), 1));
-                break;
+        LexerToken_T *cur = lexer_current(lexer);
 
-            case TOKEN_OPERATOR:
-                /* Make new operator with only identifier left in. Fill in deatils later once complete context is built */
-                oper = malloc(sizeof(Operator_T));
-                oper->identifier = malloc(strlen(token->value + 1));
-                strcpy(oper->identifier, token->value);
+        if(cur->type != TOKEN_OPERATOR) break;
 
-                current = ll_append(current, ll_create_filled_nocopy(ASTNode(NODE_OPERATOR_PLACEHOLDER, oper), 1));
-                break; 
-            case TOKEN_LPAREN:
-                current = ll_append(current, ll_create_filled_nocopy(parse_tokenstream(&tokens[i+1]), 1));
-                i += ll_size(current);
+        lexer_advance(lexer);
+        LexerToken_T *next = lexer_current(lexer);
+
+        
+        Operator_T *op = deduce_operator_from_context(cur->value, next);
+        
+        if(op->precedence > max_prec) break;
+
+        if(op->arity == OPERATORARITY_UNARY)
+        {
+            
+        }
+
+        else if(op->arity == OPERATORARITY_BINARY)
+        {
+
+            next_max_prec = op->precedence;
+            if(op->associativity == OPERATORASSOC_LEFT) next_max_prec -= 1;
+            rhand = parse_expr(lexer, next_max_prec);
+            lhand = parse_binop(op, lhand, rhand);
+        }
+        
+    }
+
+    return lhand;
+
+}
+
+Operator_T *deduce_operator_from_context(char *identifier, LexerToken_T *next_token)
+{
+    LinkedList_T *operators = match_operator_by_criteria(identifier, -1, OPERATOR_NONE, OPERATORARITY_NONE, 0);
+   
+    size_t opc = ll_size(operators);
+
+    if(opc == 1) return (Operator_T*)operators->value;
+    
+    LinkedList_T *current = operators;
+ 
+    while(current->value != NULL)
+    {
+        Operator_T *current_operator = (Operator_T*)current->value;
+
+        if(current_operator->arity == OPERATORARITY_UNARY)
+        {
+            if(current_operator->affix == OPERATORAFFIX_PREFIX)
+            {
+               if(tokisoperatable(next_token->type)) return current_operator;
+            }
+
+            else if(current_operator->affix == OPERATORAFFIX_POSTFIX)
+            {
+                if(tokisnotoperatable(next_token->type)) return current_operator;
+            }
+        }
+
+        else if(current_operator->arity == OPERATORARITY_BINARY)
+        {
+            if(tokisoperatable(next_token->type)) return current_operator;
+        }
+        
+        current = current->next;
+    }
+    return NULL; 
+}
+
+ASTNode_T *parse_binop(Operator_T *op, ASTNode_T *lhand, ASTNode_T *rhand)
+{
+    return BinaryOperator(op, lhand, rhand);
+}
+
+ASTNode_T *parse_unop(Operator_T *op, ASTNode_T *operand)
+{
+    return UnaryOperator(op, operand);
+}
+
+void tokenint2mpz(mpz_t r, char *str)
+{
+    /* assume initialized mpz_t */
+    int base = 0;
+
+    if(strlen(str) <= 2)
+    {
+        base = 10;
+    }
+
+    else
+    {
+        switch(str[1])
+        {
+            case 'x':
+                base = 16;
                 break;
-            case TOKEN_RPAREN:
-                return Expression(astnodes);
-
-            case TOKEN_COMMA:
-                current = ll_append(current, ll_create_filled_nocopy(ASTNode(NODE_SEPERATOR_PLACEHOLDER, NULL), 1));
+            case 'b':
+                base = 2;
                 break;
+            case 'o':
+                base = 8;
+                break;
+            default: 
+                base = 10;
+                break;
+        }
+    }
+    mpz_set_str(r, base == 10 ? str : &str[2], base);
+    
+}
 
-       }
-    } 
-    return Expression(astnodes);
+void tokenfloat2mpf(mpf_t r, char *str)
+{
+    mpf_set_str(r, str, 10);
 }

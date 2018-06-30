@@ -7,13 +7,15 @@ LinkedList_T *ll_set_copy(LinkedList_T *original, void *value, size_t nbytes)
     original->value = malloc(nbytes);
     memcpy(original->value, value, nbytes);
     original->dynamically_allocated = 1;
+    original->valuec = nbytes;
     return original;
 }
 
-LinkedList_T *ll_set_nocopy(LinkedList_T *original, void *value, int dynamically_allocated)
+LinkedList_T *ll_set_nocopy(LinkedList_T *original, void *value, int dynamically_allocated, size_t valuec)
 {
     original->value = value;
     original->dynamically_allocated = dynamically_allocated;
+    original->valuec = valuec;
     return original;
 }
 
@@ -23,6 +25,7 @@ LinkedList_T *ll_create_empty()
     l->value = NULL;
     l->next = NULL;
     l->dynamically_allocated = 0;
+    l->valuec = 0;
     return l;
 }
 
@@ -33,15 +36,35 @@ LinkedList_T *ll_create_filled_copy(void *value, size_t nbytes)
 
 }
 
-LinkedList_T *ll_create_filled_nocopy(void *value, int dynamically_allocated)
+LinkedList_T *ll_create_filled_nocopy(void *value, int dynamically_allocated, size_t valuec)
 {
-    return ll_set_nocopy(ll_create_empty(), value, dynamically_allocated);
+    return ll_set_nocopy(ll_create_empty(), value, dynamically_allocated, valuec);
 }
 
 LinkedList_T *ll_append(LinkedList_T *original, LinkedList_T *toappend)
 {
    original->next = toappend; 
    return original->next;
+}
+
+LinkedList_T *ll_copy(LinkedList_T *original, size_t limit)
+{
+    LinkedList_T *copy = ll_create_empty();
+
+    LinkedList_T *copy_current = copy;
+    LinkedList_T *original_current = original;
+
+    for(int i = 0; limit == 0 ? 1 : limit < i; ++i)
+    {
+        copy_current = ll_set_copy(copy_current, original_current->value, original_current->valuec);
+
+        copy_current = ll_append(copy_current, ll_create_empty());
+
+        original_current = original_current->next;
+
+        if(original_current->value == NULL) break;
+    }
+    return copy;
 }
 
 void ll_free(LinkedList_T *tofree)
@@ -68,7 +91,7 @@ void ll_free(LinkedList_T *tofree)
 size_t ll_size(LinkedList_T *l)
 {
     LinkedList_T *current = l;
-    size_t c = 1;
+    size_t c = 0;
     while(current->value != NULL)
     {
         c++;
@@ -93,8 +116,3 @@ void **ll_to_array(LinkedList_T *original)
     }
     return result;
 }
-
-/*
-LinkedList_T *fill = append_llnode(append_llnode(create_emptyll(), create_filledll_nocopy("abcdef", 0)), create_filledll_nocopy(malloc(8), 1));
-
-*/

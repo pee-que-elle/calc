@@ -12,12 +12,15 @@ ASTNode_T *ASTNode(NodeType type, void *assoc)
     return n;
 }
 
-ASTNode_T *Expression(LinkedList_T *nodes)
+ASTNode_T *FunctionCall(ASTNode_T *identifier, LinkedList_T *args)
 {
-
+    FunctionCall_T *f = malloc(sizeof(BinaryOperator_T));
+    f->identifier = identifier;
+    f->args = args;
+    return ASTNode(NODE_FUNCTIONCALL, f);
 }
 
-ASTNode_T *UnaryOperator(Operator_T *operator, Expression_T *operand)
+ASTNode_T *UnaryOperator(Operator_T *operator, ASTNode_T *operand)
 {
 
     UnaryOperator_T *o = malloc(sizeof(UnaryOperator_T));
@@ -26,7 +29,7 @@ ASTNode_T *UnaryOperator(Operator_T *operator, Expression_T *operand)
     return ASTNode(NODE_UNARYOPERATOR, o);
 }
 
-ASTNode_T *BinaryOperator(Operator_T *operator, Expression_T *lhand, Expression_T *rhand)
+ASTNode_T *BinaryOperator(Operator_T *operator, ASTNode_T *lhand, ASTNode_T *rhand)
 {
     
     BinaryOperator_T *o = malloc(sizeof(BinaryOperator_T));
@@ -34,7 +37,6 @@ ASTNode_T *BinaryOperator(Operator_T *operator, Expression_T *lhand, Expression_
     o->lhand = lhand;
     o->rhand = rhand;
     return ASTNode(NODE_BINARYOPERATOR, o);
-
 }
 
 ASTNode_T *Integer(mpz_t value)

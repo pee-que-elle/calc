@@ -14,7 +14,6 @@
 
 /* Forward decls */
 typedef struct ASTNode ASTNode_T;
-    typedef struct Expression Expression_T;
     typedef struct FunctionCall FunctionCall_T;
     typedef struct UnaryOperator UnaryOperator_T;
     typedef struct BinaryOperator BinaryOperator_T;
@@ -24,11 +23,8 @@ typedef struct ASTNode ASTNode_T;
     typedef struct Identifier Identifier_T;
 
 typedef enum NodeType {
-    NODE_EXPRESSION,
     NODE_FUNCTIONCALL,
     NODE_IDENTIFIER,
-    NODE_OPERATOR_PLACEHOLDER, /* NEVER have this in complete tree */
-    NODE_SEPERATOR_PLACEHOLDER, /* same story */
     NODE_UNARYOPERATOR,
     NODE_BINARYOPERATOR,
     NODE_STRING,
@@ -42,26 +38,22 @@ struct ASTNode {
     void *assoc;
 };
 
-struct Expression {
-   LinkedList_T *expr; 
-};
-
 struct FunctionCall {
     ASTNode_T *identifier;
-    LinkedList_T args;
+    LinkedList_T/*<ASTNode_T*>*/ *args;
 };
 
 struct UnaryOperator {
     /* ~x, -x, +x, x!, etc */
     Operator_T *operator;
-    Expression_T *operand;
+    ASTNode_T *operand;
 };
 
 struct BinaryOperator {
     /* x + y, x - y, x * y, x ^ y, x ** y, etc */
     Operator_T *operator;
-    Expression_T *lhand;
-    Expression_T *rhand;
+    ASTNode_T *lhand;
+    ASTNode_T *rhand;
 };
 
 struct Integer {
@@ -79,10 +71,9 @@ struct Identifier {
 };
 
 ASTNode_T *ASTNode(NodeType type, void *assoc);
-    ASTNode_T *Expression(LinkedList_T *nodes);
-    ASTNode_T *FunctionCall(ASTNode_T identifier, LinkedList_T *args);
-    ASTNode_T *UnaryOperator(Operator_T *operator, Expression_T *operand);
-    ASTNode_T *BinaryOperator(Operator_T *operator, Expression_T *lhand, Expression_T *rhand);    
+    ASTNode_T *FunctionCall(ASTNode_T *identifier, LinkedList_T *args);
+    ASTNode_T *UnaryOperator(Operator_T *operator, ASTNode_T *operand);
+    ASTNode_T *BinaryOperator(Operator_T *operator, ASTNode_T *lhand, ASTNode_T *rhand);    
     ASTNode_T *Integer(mpz_t value);
     ASTNode_T *Float(mpf_t value);
     ASTNode_T *String(char *value);
