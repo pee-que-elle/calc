@@ -9,6 +9,8 @@ int main(unsigned argc, char** argv)
 {
     LinkedList_T *t = lex(argv[1]);
     LinkedList_T *current = t;
+
+    printf("Lexer info: ");
     while(1)
     {
         if(current->value == NULL) break;
@@ -20,6 +22,11 @@ int main(unsigned argc, char** argv)
     putchar('\n');
 
     ASTNode_T *parsed = parse(t);
+    
+    if(parsed == NULL)
+    {
+        return 1;
+    }
 
     printf("%s", nodetype2str(parsed->type));
 

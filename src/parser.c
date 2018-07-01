@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-
+#include <limits.h>
 #include <stdint.h>
 
 ASTNode_T *parse(LinkedList_T *tokens)
@@ -10,7 +10,7 @@ ASTNode_T *parse(LinkedList_T *tokens)
     Lexer_T *lexer = malloc(sizeof(Lexer_T));
     lexer->current = tokens;
     
-    return parse_expr(lexer, 2147483647);
+    return parse_expr(lexer, INT_MAX);
 }
 
 ASTNode_T *parse_atom(Lexer_T *lexer)
@@ -20,6 +20,18 @@ ASTNode_T *parse_atom(Lexer_T *lexer)
     if(cur->type == TOKEN_LPAREN)
     {
         lexer_advance(lexer);
+        ASTNode_T *result = parse_expr(lexer,  INT_MAX);
+        
+        if(result == NULL) return NULL;
+
+        cur = (LexerToken_T*)lexer_current(lexer);
+        if(cur == NULL || cur->type != TOKEN_RPAREN)
+        {
+            puts("Unmatched ')' encountered.");
+            return NULL;
+        }
+        lexer_advance(lexer);
+        return result;
 
     }
     else if(cur->type == TOKEN_IDENTIFIER)
@@ -96,6 +108,8 @@ ASTNode_T *parse_expr(Lexer_T *lexer, int max_prec)
 
     ASTNode_T *lhand = parse_atom(lexer);
     
+    if(lhand == NULL) return NULL;
+
     ASTNode_T *rhand = NULL;
 
     size_t next_max_prec = max_prec;
@@ -123,6 +137,9 @@ ASTNode_T *parse_expr(Lexer_T *lexer, int max_prec)
             next_max_prec = op->precedence;
             if(op->associativity == OPERATORASSOC_LEFT) next_max_prec -= 1;
             rhand = parse_expr(lexer, next_max_prec);
+            
+            if(rhand == NULL) return NULL;
+
             lhand = parse_binop(op, lhand, rhand);
         }        
     }
