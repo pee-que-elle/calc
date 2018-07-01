@@ -91,7 +91,6 @@ LexerToken_T* tokenize_stringliteral(char *input)
             /* string content range is [1, i-1], length is i - 2 */
             size_t len = i - 2;
             LexerToken_T *result = create_filledtoken(TOKEN_STRING, &input[1], len+1);
-            result->value[len+1] = 0; /* null-terminate string properly */
             result->original_tokenc = len + 2 + 1; 
             return result;
         } 

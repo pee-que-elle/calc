@@ -69,7 +69,9 @@ typedef struct Operator {
     OperatorArity arity;
     union 
     {
-        BinaryOperatorAssociativity associativity;
+        struct {
+            BinaryOperatorAssociativity associativity;
+        };
         UnaryOperatorAffix affix;
     };
 

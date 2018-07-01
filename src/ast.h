@@ -81,4 +81,6 @@ ASTNode_T *ASTNode(NodeType type, void *assoc);
 
 char *nodetype2str(NodeType t);
 char *ast2str(ASTNode_T *t);
+
+void ast_free(ASTnode_T *a);
 #endif // CALC_AST

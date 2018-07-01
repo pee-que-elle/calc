@@ -17,8 +17,8 @@ LinkedList_T *match_operator_by_criteria(char *identifier, int precedence, Opera
               && (type == OPERATOR_NONE || type == currentoper->type) 
               && (arity == OPERATORARITY_NONE 
                   || ((arity == currentoper->arity) 
-                      && (arity == OPERATORARITY_UNARY && (UnaryOperatorAffix)arity_specific_value == currentoper->affix) 
-                      || (arity == OPERATORARITY_BINARY && (BinaryOperatorAssociativity)arity_specific_value == currentoper->associativity)
+                      && ((arity == OPERATORARITY_UNARY && ((UnaryOperatorAffix)arity_specific_value == OPERATORAFFIX_NONE || (UnaryOperatorAffix)arity_specific_value == currentoper->affix))
+                      || (arity == OPERATORARITY_BINARY && ((BinaryOperatorAssociativity)arity_specific_value == OPERATORASSOC_NONE || (BinaryOperatorAssociativity)arity_specific_value == currentoper->associativity)))
                  )
               )
           )

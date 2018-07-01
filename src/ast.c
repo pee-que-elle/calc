@@ -105,8 +105,11 @@ char *ast2str(ASTNode_T *str)
     format[0] = toupper(format[0]);
     char *subformat = NULL;
     
-    char **str_accumulator = calloc(1, sizeof(char*)*4);
-
+    //char **str_accumulator = calloc(4, sizeof(char*)); THIS FUCKS OVER EVERYTHING. 
+    
+    char **str_accumulator = malloc(sizeof(char*)*4);
+    memset(str_accumulator, 0,  sizeof(char*)*4);
+    
     LinkedList_T *ll_accumulator = NULL;
     size_t size_accumulator = 0;
     
@@ -131,10 +134,12 @@ char *ast2str(ASTNode_T *str)
             {
                 str_accumulator[2] = ast2str(((ASTNode_T*)(ll_accumulator->value)));
 
-                size_accumulator += ll_accumulator->next->value == NULL ? strlen(str_accumulator[2]) + 1: strlen(str_accumulator[2]) + 3;
+                size_accumulator += ll_accumulator->next->value == NULL ? strlen(str_accumulator[2]) : strlen(str_accumulator[2]) + 2;
 
-                str_accumulator[1] = realloc(str_accumulator[1], size_accumulator);
-                strcat(str_accumulator[1], str_accumulator[2]);
+                str_accumulator[1] = realloc(str_accumulator[1], size_accumulator + 1);
+                
+                if(str_accumulator[1][0] == 0) strcpy(str_accumulator[1], str_accumulator[2]);
+                else strcat(str_accumulator[1], str_accumulator[2]);
 
                 if(ll_accumulator->next->value != NULL) strcat(str_accumulator[1], ", ");
 
@@ -193,5 +198,20 @@ char *ast2str(ASTNode_T *str)
     free(str_accumulator[3]);
     free(str_accumulator);
     return result;
+}
 
+void ast_free(ASTNode_T *t)
+{
+    switch(t->type)
+    {
+        case NODE_INTEGER:
+            mpz_clear(((Integer_T*)t->assoc)->value);
+            break;
+        case NODE_FLOAT:
+            mpz_clear(((Float_T*)t->assoc)->value);
+            break;
+        case NODE_STRING:
+            free(((Float_T*)t->assoc)->value);
+            break;
+    }
 }

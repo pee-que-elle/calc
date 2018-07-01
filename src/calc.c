@@ -31,6 +31,8 @@ int main(unsigned argc, char** argv)
     }
 
     printf("%s", ast2str(parsed));
-
+    
     putchar('\n');
+
+    ll_free(t);
 }

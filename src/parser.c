@@ -132,10 +132,8 @@ ASTNode_T *parse_atom(Lexer_T *lexer)
 
 ASTNode_T *parse_expr(Lexer_T *lexer, int max_prec)
 {
-    LexerToken_T *prev = lexer_current(lexer);
 
     ASTNode_T *lhand = parse_atom(lexer);
-    
     if(lhand == NULL) return NULL;
 
     ASTNode_T *rhand = NULL;
@@ -145,112 +143,30 @@ ASTNode_T *parse_expr(Lexer_T *lexer, int max_prec)
     while(1)
     {
         LexerToken_T *cur = lexer_current(lexer);
+
         if(cur == NULL || cur->type != TOKEN_OPERATOR) break;
         
-        lexer_advance(lexer);
-        LexerToken_T *next = lexer_current(lexer);
-        
-        Operator_T *op = deduce_operator_from_context(prev, cur->value, next);
-        
+        LinkedList_T *operators = match_operator_by_criteria(cur->value, -1, OPERATOR_NONE, OPERATORARITY_BINARY, OPERATORASSOC_NONE);
+        if(ll_size(operators) != 1) return NULL;
+
+        Operator_T *op = operators->value;
+         
         if(op->precedence > max_prec) break;
-        
-        
+                
         next_max_prec = op->precedence;
 
-        if(op->arity == OPERATORARITY_UNARY)
-        {
-            rhand = parse_expr(lexer, next_max_prec);
+        if(op->associativity == OPERATORASSOC_LEFT) next_max_prec -= 1;
 
-            if(rhand == NULL) return NULL;
+        lexer_advance(lexer);
+        rhand = parse_expr(lexer, next_max_prec);
+        if(rhand == NULL) return NULL;
 
-            lhand = parse_unop(op, rhand);
+        lhand = parse_binop(op, lhand, rhand);
 
-            prev = lexer_current(lexer);
-        }
-
-        else if(op->arity == OPERATORARITY_BINARY)
-        {
-            if(op->associativity == OPERATORASSOC_LEFT) next_max_prec -= 1;
-            rhand = parse_expr(lexer, next_max_prec);
-            
-            if(rhand == NULL) return NULL;
-
-            lhand = parse_binop(op, lhand, rhand);
-
-            prev = lexer_current(lexer);
-        }        
     }
 
     return lhand;
 
-}
-
-Operator_T *deduce_operator_from_context(LexerToken_T *prev_token, char *identifier, LexerToken_T *next_token)
-{
-    LinkedList_T *operators = match_operator_by_criteria(identifier, -1, OPERATOR_NONE, OPERATORARITY_NONE, 0);
-   
-    size_t opc = ll_size(operators);
-
-    if(opc == 1) return (Operator_T*)operators->value;
-    
-    LinkedList_T *current = operators;
- 
-    while(current->value != NULL)
-    {
-        Operator_T *current_operator = (Operator_T*)current->value;
-
-        if(current_operator->arity == OPERATORARITY_UNARY)
-        {
-            if(current_operator->affix == OPERATORAFFIX_PREFIX)
-            {
-               if(
-                       (
-                       tokisoperatable(next_token->type)
-                       || next_token->type == TOKEN_LPAREN 
-                       )
-                       && 
-                       (
-                       tokisnotoperatable(prev_token->type)
-                       || prev_token->type == TOKEN_LPAREN
-                       )
-                 ) return current_operator;
-            }
-
-            else if(current_operator->affix == OPERATORAFFIX_POSTFIX)
-            {
-                if(
-                        (
-                        tokisoperatable(prev_token->type)
-                        || prev_token->type == TOKEN_RPAREN
-                        )
-                        &&
-                        (
-                        tokisnotoperatable(next_token->type)
-                        || next_token->type == TOKEN_RPAREN
-                        )
-
-                  ) return current_operator;
-            }
-        }
-
-        else if(current_operator->arity == OPERATORARITY_BINARY)
-        {
-            if(
-                    (
-                    tokisoperatable(next_token->type) 
-                    || next_token->type == TOKEN_LPAREN
-                    )
-                    &&
-                    (
-                    tokisoperatable(prev_token->type)
-                    || prev_token->type == TOKEN_RPAREN
-                    )
-              ) return current_operator;
-        }
-        
-        current = current->next;
-    }
-    return NULL; 
 }
 
 ASTNode_T *parse_binop(Operator_T *op, ASTNode_T *lhand, ASTNode_T *rhand)
