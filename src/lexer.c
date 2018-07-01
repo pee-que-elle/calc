@@ -312,7 +312,6 @@ int tokisoperatable(TokenType t)
         case TOKEN_STRING:
         case TOKEN_INT:
         case TOKEN_FLOAT:
-        case TOKEN_LPAREN:
         case TOKEN_IDENTIFIER:
             return 1;
         default: return 0;
@@ -325,7 +324,6 @@ int tokisnotoperatable(TokenType t)
     switch(t)
     {
         case TOKEN_COMMA:
-        case TOKEN_RPAREN:
         case TOKEN_OPERATOR:
             return 1;
         default: return 0;

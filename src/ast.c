@@ -70,3 +70,21 @@ ASTNode_T *Identifier(char *value)
     o->identifier = value;
     return ASTNode(NODE_IDENTIFIER, o);
 }
+
+char *nodetype2str(NodeType t)
+{
+    #define CASE_STR(t, x) case NODE_##t: return x;
+
+    switch(t)
+    {
+        CASE_STR(FUNCTIONCALL, "functioncall");
+        CASE_STR(IDENTIFIER, "identifier");
+        CASE_STR(UNARYOPERATOR, "unary operator");
+        CASE_STR(BINARYOPERATOR, "binary operator");
+        CASE_STR(STRING, "string");
+        CASE_STR(INTEGER, "integer");
+        CASE_STR(FLOAT, "float");
+        CASE_STR(NONE, "none");
+        default: return "????";
+    }
+}

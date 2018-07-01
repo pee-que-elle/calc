@@ -9,8 +9,8 @@ ASTNode_T *parse(LinkedList_T *tokens)
 {
     Lexer_T *lexer = malloc(sizeof(Lexer_T));
     lexer->current = tokens;
-
-    return parse_expr(lexer, (int)((uint32_t)-1));
+    
+    return parse_expr(lexer, 2147483647);
 }
 
 ASTNode_T *parse_atom(Lexer_T *lexer)
@@ -56,7 +56,6 @@ ASTNode_T *parse_atom(Lexer_T *lexer)
                     printf("Unexpected token '%s'", toktype2str(cur->type));
                     return NULL;
                 }
-
             }
             return FunctionCall(identifier, params);
         }
@@ -68,11 +67,13 @@ ASTNode_T *parse_atom(Lexer_T *lexer)
     }
     else if(cur->type == TOKEN_STRING)
     {
+        lexer_advance(lexer);
         return String(cur->value);
     }
 
     else if(cur->type == TOKEN_FLOAT)
     {
+        lexer_advance(lexer);
         mpf_t f;
         mpf_init(f);
         tokenfloat2mpf(f, cur->value);
@@ -81,6 +82,7 @@ ASTNode_T *parse_atom(Lexer_T *lexer)
 
     else if(cur->type == TOKEN_INT)
     {
+        lexer_advance(lexer);
         mpz_t i;
         mpz_init(i);
         tokenint2mpz(i, cur->value);
@@ -90,23 +92,24 @@ ASTNode_T *parse_atom(Lexer_T *lexer)
 
 ASTNode_T *parse_expr(Lexer_T *lexer, int max_prec)
 {
+    LexerToken_T *prev = lexer_current(lexer);
+
     ASTNode_T *lhand = parse_atom(lexer);
     
     ASTNode_T *rhand = NULL;
 
     size_t next_max_prec = max_prec;
+    
 
     while(1)
     {
         LexerToken_T *cur = lexer_current(lexer);
-
-        if(cur->type != TOKEN_OPERATOR) break;
-
+        if(cur == NULL || cur->type != TOKEN_OPERATOR) break;
+        
         lexer_advance(lexer);
         LexerToken_T *next = lexer_current(lexer);
-
         
-        Operator_T *op = deduce_operator_from_context(cur->value, next);
+        Operator_T *op = deduce_operator_from_context(prev, cur->value, next);
         
         if(op->precedence > max_prec) break;
 
@@ -117,20 +120,18 @@ ASTNode_T *parse_expr(Lexer_T *lexer, int max_prec)
 
         else if(op->arity == OPERATORARITY_BINARY)
         {
-
             next_max_prec = op->precedence;
             if(op->associativity == OPERATORASSOC_LEFT) next_max_prec -= 1;
             rhand = parse_expr(lexer, next_max_prec);
             lhand = parse_binop(op, lhand, rhand);
-        }
-        
+        }        
     }
 
     return lhand;
 
 }
 
-Operator_T *deduce_operator_from_context(char *identifier, LexerToken_T *next_token)
+Operator_T *deduce_operator_from_context(LexerToken_T *prev_token, char *identifier, LexerToken_T *next_token)
 {
     LinkedList_T *operators = match_operator_by_criteria(identifier, -1, OPERATOR_NONE, OPERATORARITY_NONE, 0);
    
@@ -148,18 +149,49 @@ Operator_T *deduce_operator_from_context(char *identifier, LexerToken_T *next_to
         {
             if(current_operator->affix == OPERATORAFFIX_PREFIX)
             {
-               if(tokisoperatable(next_token->type)) return current_operator;
+               if(
+                       (
+                       tokisoperatable(next_token->type)
+                       || next_token->type == TOKEN_LPAREN 
+                       )
+                       && 
+                       (
+                       tokisnotoperatable(prev_token->type)
+                       || prev_token->type == TOKEN_LPAREN
+                       )
+                 ) return current_operator;
             }
 
             else if(current_operator->affix == OPERATORAFFIX_POSTFIX)
             {
-                if(tokisnotoperatable(next_token->type)) return current_operator;
+                if(
+                        (
+                        tokisoperatable(prev_token->type)
+                        || prev_token->type == TOKEN_RPAREN
+                        )
+                        &&
+                        (
+                        tokisnotoperatable(next_token->type)
+                        || next_token->type == TOKEN_RPAREN
+                        )
+
+                  ) return current_operator;
             }
         }
 
         else if(current_operator->arity == OPERATORARITY_BINARY)
         {
-            if(tokisoperatable(next_token->type)) return current_operator;
+            if(
+                    (
+                    tokisoperatable(next_token->type) 
+                    || next_token->type == TOKEN_LPAREN
+                    )
+                    &&
+                    (
+                    tokisoperatable(prev_token->type)
+                    || prev_token->type == TOKEN_RPAREN
+                    )
+              ) return current_operator;
         }
         
         current = current->next;

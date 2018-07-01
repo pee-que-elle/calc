@@ -78,4 +78,7 @@ ASTNode_T *ASTNode(NodeType type, void *assoc);
     ASTNode_T *Float(mpf_t value);
     ASTNode_T *String(char *value);
     ASTNode_T *Identifier(char *value);
+
+char *nodetype2str(NodeType t);
+
 #endif // CALC_AST

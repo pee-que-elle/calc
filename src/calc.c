@@ -3,7 +3,7 @@
 
 #include "ast.h"
 #include "lexer.h"
-
+#include "parser.h"
 
 int main(unsigned argc, char** argv)
 {
@@ -17,6 +17,11 @@ int main(unsigned argc, char** argv)
         current = current->next;
     }
 
+    putchar('\n');
+
+    ASTNode_T *parsed = parse(t);
+
+    printf("%s", nodetype2str(parsed->type));
 
     putchar('\n');
 }
