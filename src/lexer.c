@@ -90,11 +90,11 @@ LexerToken_T* tokenize_stringliteral(char *input)
         {
             /* string content range is [1, i-1], length is i - 2 */
             size_t len = i - 2;
-            LexerToken_T *result = create_filledtoken(TOKEN_STRING, &result[1], len+1);
-            result->value[len] = 0; /* null-terminate string properly */
-            result->original_tokenc = len + 2; 
+            LexerToken_T *result = create_filledtoken(TOKEN_STRING, &input[1], len+1);
+            result->value[len+1] = 0; /* null-terminate string properly */
+            result->original_tokenc = len + 2 + 1; 
             return result;
-        }         
+        } 
     }
     return NULL; /* Reached end of input withput encountering a '"' */
 }
@@ -173,7 +173,7 @@ LexerToken_T* tokenize_floatliteral(char *input)
 
 LexerToken_T* tokenize_operator(char *input)
 {
-    char *touse = calloc(0,1);
+    char *touse = calloc(1,1);
     for(int i = 0; i  < (sizeof operators/sizeof *operators); ++i)
     {
         
@@ -278,7 +278,7 @@ char *toktype2str(TokenType t)
 char *tok2str(LexerToken_T *tok)
 {
     #define CHAR2STR(c)         \
-        result = calloc(0, 2);  \
+        result = calloc(1, 2);  \
         result[0] = c;
     char *result;
 

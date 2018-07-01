@@ -5,6 +5,18 @@
 #include <limits.h>
 #include <stdint.h>
 
+
+char *parsererror2str(ParserError e)
+{
+    #define ERRORCASE(error, string) case PARSERERROR_##error: return string;
+
+    switch(e)
+    {
+        ERRORCASE(UNBALANCEDPARENTHESES, "Unbalanced parentheses encountered");
+        default: return "???";
+    }
+}
+
 ASTNode_T *parse(LinkedList_T *tokens)
 {
     Lexer_T *lexer = malloc(sizeof(Lexer_T));
@@ -17,6 +29,8 @@ ASTNode_T *parse_atom(Lexer_T *lexer)
 {
     LexerToken_T *cur = lexer_current(lexer);
     
+    if(cur == NULL) return NULL;
+
     if(cur->type == TOKEN_LPAREN)
     {
         lexer_advance(lexer);
@@ -24,10 +38,10 @@ ASTNode_T *parse_atom(Lexer_T *lexer)
         
         if(result == NULL) return NULL;
 
-        cur = (LexerToken_T*)lexer_current(lexer);
+        cur = lexer_current(lexer);
         if(cur == NULL || cur->type != TOKEN_RPAREN)
         {
-            puts("Unmatched ')' encountered.");
+            puts(parsererror2str(PARSERERROR_UNBALANCEDPARENTHESES));
             return NULL;
         }
         lexer_advance(lexer);
@@ -38,8 +52,10 @@ ASTNode_T *parse_atom(Lexer_T *lexer)
     {
         ASTNode_T *identifier = Identifier(cur->value);
         lexer_advance(lexer);
-           
-        if(lexer_current(lexer)->type == TOKEN_LPAREN)
+         
+        cur = lexer_current(lexer);
+
+        if(cur != NULL && cur->type == TOKEN_LPAREN)
         {
             lexer_advance(lexer);
             
@@ -48,12 +64,24 @@ ASTNode_T *parse_atom(Lexer_T *lexer)
 
             while(1)
             {
-                ll_set_nocopy(current_param, parse_expr(lexer, 1), 1, sizeof(ASTNode_T));
+                ASTNode_T *cur_node = parse_expr(lexer, INT_MAX);
+                if(cur_node == NULL)
+                { 
+                    puts(parsererror2str(PARSERERROR_UNBALANCEDPARENTHESES));
+                    return NULL;
+                }
+                ll_set_nocopy(current_param, cur_node, 1, sizeof(ASTNode_T));
                 
                 if(current_param->value == NULL) return NULL;
 
                 current_param = ll_append(current_param, ll_create_empty());
                 cur = lexer_current(lexer);
+            
+                if(cur == NULL)
+                {
+                    puts(parsererror2str(PARSERERROR_UNBALANCEDPARENTHESES));
+                    return NULL;
+                }
 
                 if(cur->type == TOKEN_COMMA)
                 {
@@ -114,7 +142,6 @@ ASTNode_T *parse_expr(Lexer_T *lexer, int max_prec)
 
     size_t next_max_prec = max_prec;
     
-
     while(1)
     {
         LexerToken_T *cur = lexer_current(lexer);
@@ -126,21 +153,31 @@ ASTNode_T *parse_expr(Lexer_T *lexer, int max_prec)
         Operator_T *op = deduce_operator_from_context(prev, cur->value, next);
         
         if(op->precedence > max_prec) break;
+        
+        
+        next_max_prec = op->precedence;
 
         if(op->arity == OPERATORARITY_UNARY)
         {
-            
+            rhand = parse_expr(lexer, next_max_prec);
+
+            if(rhand == NULL) return NULL;
+
+            lhand = parse_unop(op, rhand);
+
+            prev = lexer_current(lexer);
         }
 
         else if(op->arity == OPERATORARITY_BINARY)
         {
-            next_max_prec = op->precedence;
             if(op->associativity == OPERATORASSOC_LEFT) next_max_prec -= 1;
             rhand = parse_expr(lexer, next_max_prec);
             
             if(rhand == NULL) return NULL;
 
             lhand = parse_binop(op, lhand, rhand);
+
+            prev = lexer_current(lexer);
         }        
     }
 

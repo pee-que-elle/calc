@@ -63,6 +63,7 @@ typedef enum BinaryOperatorAssociativity {
 typedef struct Operator {
 
     char *identifier;
+    char *textual_type;
     int precedence;
     OperatorType type;
     OperatorArity arity;
@@ -74,7 +75,9 @@ typedef struct Operator {
 
 } Operator_T;
 
-#define O(i,p,t,o,a) {i, p, OPERATOR_##t, OPERATORARITY_##o, a}
+
+
+#define O(i,p,t,o,a) {i, #t, p, OPERATOR_##t, OPERATORARITY_##o, a}
 
 #define RIGHT OPERATORASSOC_RIGHT
 #define LEFT OPERATORASSOC_LEFT

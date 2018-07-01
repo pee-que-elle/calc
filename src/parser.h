@@ -7,6 +7,13 @@
 
 #include <gmp.h>
 
+
+typedef enum ParserError {
+
+    PARSERERROR_UNBALANCEDPARENTHESES
+
+} ParserError;
+
 ASTNode_T *parse(LinkedList_T *tokens);
 
 ASTNode_T *parse_atom(Lexer_T *lexer);

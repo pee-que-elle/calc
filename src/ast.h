@@ -80,5 +80,5 @@ ASTNode_T *ASTNode(NodeType type, void *assoc);
     ASTNode_T *Identifier(char *value);
 
 char *nodetype2str(NodeType t);
-
+char *ast2str(ASTNode_T *t);
 #endif // CALC_AST

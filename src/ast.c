@@ -1,5 +1,8 @@
+#define _GNU_SOURCE
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
+#include <ctype.h>
 #include "ast.h"
 #include "linkedlist.h"
 #include "operator.h"
@@ -79,12 +82,116 @@ char *nodetype2str(NodeType t)
     {
         CASE_STR(FUNCTIONCALL, "functioncall");
         CASE_STR(IDENTIFIER, "identifier");
-        CASE_STR(UNARYOPERATOR, "unary operator");
-        CASE_STR(BINARYOPERATOR, "binary operator");
+        CASE_STR(UNARYOPERATOR, "unaryoperator");
+        CASE_STR(BINARYOPERATOR, "binaryoperator");
         CASE_STR(STRING, "string");
         CASE_STR(INTEGER, "integer");
         CASE_STR(FLOAT, "float");
         CASE_STR(NONE, "none");
         default: return "????";
     }
+
+#undef CASE_STR
+}
+
+
+char *ast2str(ASTNode_T *str)
+{
+
+    char *result = NULL;
+
+    char *format = "%s(%s)";
+    asprintf(&format, format, nodetype2str(str->type), "%s");
+    format[0] = toupper(format[0]);
+    char *subformat = NULL;
+    
+    char **str_accumulator = calloc(1, sizeof(char*)*4);
+
+    LinkedList_T *ll_accumulator = NULL;
+    size_t size_accumulator = 0;
+    
+
+    switch(str->type)
+    {
+        case NODE_FUNCTIONCALL:
+
+            subformat = "identifier=%s, args=[%s]";
+
+            asprintf(&result, format, subformat);
+            
+            str_accumulator[3] = result;
+
+            ll_accumulator = ((FunctionCall_T*)(str->assoc))->args;
+            
+            str_accumulator[0] = ast2str(((FunctionCall_T*)(str->assoc))->identifier);
+            
+            str_accumulator[1] = malloc(0);
+
+            while(ll_accumulator->value != NULL)
+            {
+                str_accumulator[2] = ast2str(((ASTNode_T*)(ll_accumulator->value)));
+
+                size_accumulator += ll_accumulator->next->value == NULL ? strlen(str_accumulator[2]) + 1: strlen(str_accumulator[2]) + 3;
+
+                str_accumulator[1] = realloc(str_accumulator[1], size_accumulator);
+                strcat(str_accumulator[1], str_accumulator[2]);
+
+                if(ll_accumulator->next->value != NULL) strcat(str_accumulator[1], ", ");
+
+                ll_accumulator = ll_accumulator->next;
+            }
+            asprintf(&result, result, str_accumulator[0], str_accumulator[1]);
+
+            break;
+
+        case NODE_INTEGER:
+            gmp_asprintf(&result, "value=%Zd", ((Integer_T*)(str->assoc))->value);
+            str_accumulator[0] = result;
+            asprintf(&result, format, result);
+            break;
+        case NODE_FLOAT:
+            gmp_asprintf(&result, "value=%.*F", 16, ((Float_T*)(str->assoc))->value);
+            str_accumulator[0] = result;
+            asprintf(&result, format, result);
+            break;
+        case NODE_STRING:
+        case NODE_IDENTIFIER:
+            asprintf(&result, "value=\"%s\"", ((String_T*)(str->assoc))->value);
+            str_accumulator[0] = result;
+            asprintf(&result, format, result);
+            break;
+
+        case NODE_BINARYOPERATOR:
+            #define BINOP ((BinaryOperator_T*)(str->assoc))
+            subformat = "operator='%s', lhand=%s, rhand=%s";
+            
+            str_accumulator[0] = ast2str(BINOP->lhand);
+            str_accumulator[1] = ast2str(BINOP->rhand);
+
+            asprintf(&str_accumulator[2], subformat, BINOP->operator->identifier, str_accumulator[0], str_accumulator[1]);
+            asprintf(&result, format, str_accumulator[2]);
+            break;
+            
+            #undef BINOP
+       case NODE_UNARYOPERATOR:
+            #define UNOP ((UnaryOperator_T*)(str->assoc))
+
+            subformat = "operator='%s', operand=%s";
+            
+            str_accumulator[0] = ast2str(UNOP->operand);
+            asprintf(&str_accumulator[1], subformat, UNOP->operator->identifier, str_accumulator[0]);
+
+            asprintf(&result, format, str_accumulator[1]);
+            break;
+
+            #undef UNOP
+
+    }
+    free(str_accumulator[0]);
+    free(str_accumulator[1]);
+    free(str_accumulator[2]);
+    free(str_accumulator[3]);
+    free(str_accumulator);
+    return result;
+
 }
