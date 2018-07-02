@@ -28,7 +28,7 @@ typedef struct Lexer {
 } Lexer_T;
 
 LexerToken_T* create_emptytoken(TokenType type);
-LexerToken_T* create_filledtoken(TokenType type, void *value, size_t n); 
+LexerToken_T* create_filledtoken(TokenType type, char *value, size_t n); 
 
 LinkedList_T* lex(char *input);
 
