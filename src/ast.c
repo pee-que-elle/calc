@@ -134,7 +134,6 @@ char *ast2str(ASTNode_T *str)
 
             while(ll_accumulator->value != NULL)
             {
-                printf("MEME: %s\n", str_accumulator[1]);
                 str_accumulator[2] = ast2str(((ASTNode_T*)(ll_accumulator->value)));
 
                 size_accumulator += ll_accumulator->next->value == NULL ? strlen(str_accumulator[2]) : strlen(str_accumulator[2]) + 2;
@@ -219,8 +218,29 @@ void ast_free(ASTNode_T *t)
             free(C(String_T)->value);
             break;
         case NODE_FUNCTIONCALL:
-            ast_free(C(FunctionCall_T)->identifier); 
+            ast_free(C(FunctionCall_T)->identifier);
+            current = C(FunctionCall_T)->args;
+            while(current->value != NULL)
+            {
+                printf("%p\n", current);
+                ast_free(((ASTNode_T*)(current->value)));
+                current = current->next;
+            }
+             
             ll_free(C(FunctionCall_T)->args);
+            break;
+
+        case NODE_UNARYOPERATOR:
+            ast_free(C(UnaryOperator_T)->operand);
+            break;
+
+        case NODE_BINARYOPERATOR: 
+            ast_free(C(BinaryOperator_T)->lhand);
+            ast_free(C(BinaryOperator_T)->rhand);
+            break;
+        case NODE_IDENTIFIER:
+            free(C(Identifier_T)->identifier);
+
     }
     #undef C
 }

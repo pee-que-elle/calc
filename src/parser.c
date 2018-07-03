@@ -71,7 +71,6 @@ ASTNode_T *parse_atom(Lexer_T *lexer)
                     return NULL;
                 }
                 ll_set_nocopy(current_param, cur_node, 1, sizeof(ASTNode_T));
-                
                 if(current_param->value == NULL) return NULL;
 
                 current_param = ll_append(current_param, ll_create_empty());

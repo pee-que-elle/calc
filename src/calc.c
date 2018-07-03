@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include "linkedlist.h"
 
 #include "ast.h"
@@ -29,10 +30,15 @@ int main(unsigned argc, char** argv)
     {
         return 1;
     }
-
-    printf("%s", ast2str(parsed));
+    
+    char *aststr = ast2str(parsed);
+    printf("%s", aststr);
     
     putchar('\n');
+
+    free(aststr);
+    ast_free(parsed);
+
 
     ll_free(t);
 }
