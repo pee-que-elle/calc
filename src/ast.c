@@ -193,6 +193,7 @@ char *ast2str(ASTNode_T *str)
             #undef UNOP
 
     }
+    free(format);
     free(str_accumulator[0]);
     free(str_accumulator[1]);
     free(str_accumulator[2]);
@@ -209,7 +210,7 @@ void ast_free(ASTNode_T *t)
     switch(t->type)
     {
         case NODE_INTEGER:
-            mpz_clear(C(Integer_T)->value);
+            mpz_clear(C(Integer_T)->value); 
             break;
         case NODE_FLOAT:
             mpf_clear(C(Float_T)->value);
@@ -227,7 +228,7 @@ void ast_free(ASTNode_T *t)
                 current = current->next;
             }
              
-            ll_free(C(FunctionCall_T)->args);
+            ll_free(C(FunctionCall_T)->args, free);
             break;
 
         case NODE_UNARYOPERATOR:
@@ -242,5 +243,7 @@ void ast_free(ASTNode_T *t)
             free(C(Identifier_T)->identifier);
 
     }
+    free(t->assoc);
+    free(t);
     #undef C
 }

@@ -18,7 +18,13 @@ int main(unsigned argc, char** argv)
     {
         if(current == NULL || current->value == NULL) break;
         LexerToken_T *t = (LexerToken_T*)current->value;
-        printf("(%s '%s') ", toktype2str(t->type), tok2str(t)); 
+
+        char *tokstr = tok2str(t);
+
+        printf("(%s '%s') ", toktype2str(t->type), tokstr);
+
+        free(tokstr);
+
         current = current->next;
     }
 
@@ -38,7 +44,5 @@ int main(unsigned argc, char** argv)
 
     free(aststr);
     ast_free(parsed);
-
-
-    ll_free(t);
+    ll_free(t, freetoken);
 }

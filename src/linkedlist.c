@@ -67,7 +67,7 @@ LinkedList_T *ll_copy(LinkedList_T *original, size_t limit)
     return copy;
 }
 
-void ll_free(LinkedList_T *tofree)
+void ll_free(LinkedList_T *tofree, void (*free_function)(void*))
 {
     LinkedList_T *temp;
     LinkedList_T *current = tofree;
@@ -76,7 +76,7 @@ void ll_free(LinkedList_T *tofree)
     {
         temp = current;
 
-        if(current->dynamically_allocated) free(current->value);
+        if(current->dynamically_allocated && free_function != NULL) free_function(current->value);
     
         if(current->value == NULL)
         {

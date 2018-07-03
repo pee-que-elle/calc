@@ -26,6 +26,13 @@ LexerToken_T* create_filledtoken(TokenType type, char* value, size_t n)
     return tok;
 }
 
+
+void freetoken(LexerToken_T *t)
+{
+    free(t->value);
+    free(t);
+}
+
 LinkedList_T* lex(char* input)
 {
     LinkedList_T* toks = ll_create_empty();
@@ -43,7 +50,7 @@ LinkedList_T* lex(char* input)
         LexerToken_T *current_token = tokenize(&input[i]);
         if(current_token == NULL || current_token->original_tokenc == 0)
         {
-            ll_free(toks);
+            ll_free(toks, freetoken);
             return NULL;
         }
         
@@ -186,10 +193,15 @@ LexerToken_T* tokenize_operator(char *input)
             strcpy(touse, current);
         }
     }
-    if(touse[0] == 0) return NULL;
+    if(touse[0] == 0)
+    {
+        free(touse);
+        return NULL;
+    }
     
     size_t touse_len = strlen(touse);
     LexerToken_T* result = create_filledtoken(TOKEN_OPERATOR, touse, touse_len+1);
+    free(touse);
     result->value[touse_len] = 0;
     result->original_tokenc = touse_len;
     return result;

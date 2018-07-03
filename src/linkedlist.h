@@ -27,7 +27,7 @@ LinkedList_T *ll_append(LinkedList_T *original, LinkedList_T *toappend);
 
 LinkedList_T *ll_copy(LinkedList_T *original, size_t limit);
 
-void ll_free(LinkedList_T *tofree);
+void ll_free(LinkedList_T *tofree, void (*free_function)());
 size_t ll_size(LinkedList_T *l);
 
 void **ll_to_array(LinkedList_T *original);

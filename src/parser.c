@@ -22,7 +22,9 @@ ASTNode_T *parse(LinkedList_T *tokens)
     Lexer_T *lexer = malloc(sizeof(Lexer_T));
     lexer->current = tokens;
     
-    return parse_expr(lexer, INT_MAX);
+    ASTNode_T *result = parse_expr(lexer, INT_MAX);
+    free(lexer);
+    return result;
 }
 
 ASTNode_T *parse_atom(Lexer_T *lexer)
@@ -116,7 +118,9 @@ ASTNode_T *parse_atom(Lexer_T *lexer)
         mpf_t f;
         mpf_init(f);
         tokenfloat2mpf(f, cur->value);
-        return Float(f);
+        ASTNode_T *result =  Float(f);
+        mpf_clear(f);
+        return result;
     }
 
     else if(cur->type == TOKEN_INT)
@@ -125,7 +129,11 @@ ASTNode_T *parse_atom(Lexer_T *lexer)
         mpz_t i;
         mpz_init(i);
         tokenint2mpz(i, cur->value);
-        return Integer(i);
+
+        ASTNode_T *result = Integer(i);
+
+        mpz_clear(i);
+        return result;
     }
 }
 
@@ -147,9 +155,10 @@ ASTNode_T *parse_expr(Lexer_T *lexer, int max_prec)
         
         LinkedList_T *operators = match_operator_by_criteria(cur->value, -1, OPERATOR_NONE, OPERATORARITY_BINARY, OPERATORASSOC_NONE);
         if(ll_size(operators) != 1) return NULL;
-
+        
         Operator_T *op = operators->value;
-         
+        
+        ll_free(operators, free); 
         if(op->precedence > max_prec) break;
                 
         next_max_prec = op->precedence;
@@ -160,7 +169,7 @@ ASTNode_T *parse_expr(Lexer_T *lexer, int max_prec)
         rhand = parse_expr(lexer, next_max_prec);
         if(rhand == NULL) return NULL;
 
-        lhand = parse_binop(op, lhand, rhand);
+        lhand = parse_binop(op, lhand, rhand);        
 
     }
 
