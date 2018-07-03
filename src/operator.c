@@ -23,7 +23,7 @@ LinkedList_T *match_operator_by_criteria(char *identifier, int precedence, Opera
               )
           )
         {
-            current = ll_append(ll_set_copy(current, currentoper, sizeof(Operator_T)), ll_create_empty());
+            current = ll_append(ll_set_nocopy(current, currentoper, 0, sizeof(Operator_T)), ll_create_empty());
         }
     }
     return matches;
