@@ -220,15 +220,7 @@ void ast_free(ASTNode_T *t)
             break;
         case NODE_FUNCTIONCALL:
             ast_free(C(FunctionCall_T)->identifier);
-            current = C(FunctionCall_T)->args;
-            while(current->value != NULL)
-            {
-                printf("%p\n", current);
-                ast_free(((ASTNode_T*)(current->value)));
-                current = current->next;
-            }
-             
-            ll_free(C(FunctionCall_T)->args, free);
+            ll_free(C(FunctionCall_T)->args, ast_free);             
             break;
 
         case NODE_UNARYOPERATOR:

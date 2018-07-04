@@ -184,7 +184,6 @@ ASTNode_T *parse_expr(Lexer_T *lexer, int max_prec)
         
         Operator_T *op = operators->value;
         
-        ll_free(operators, free); 
         if(op->precedence > max_prec) break;
                 
         next_max_prec = op->precedence;

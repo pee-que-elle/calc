@@ -75,8 +75,11 @@ void ll_free(LinkedList_T *tofree, void (*free_function)(void*))
     while(1) 
     {
         temp = current;
-
-        if(current->dynamically_allocated && free_function != NULL) free_function(current->value);
+        
+        if(current->dynamically_allocated && free_function != NULL)
+        {
+            free_function(current->value);
+        }
     
         if(current->value == NULL)
         {
