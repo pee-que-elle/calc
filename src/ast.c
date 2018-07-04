@@ -71,7 +71,8 @@ ASTNode_T *String(char *value)
 ASTNode_T *Identifier(char *value)
 {
     Identifier_T *o = malloc(sizeof(Identifier_T));
-    o->identifier = value;
+    o->identifier = malloc(strlen(value)+1);
+    strcpy(o->identifier, value);
     return ASTNode(NODE_IDENTIFIER, o);
 }
 
