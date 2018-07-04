@@ -99,6 +99,7 @@ ASTNode_T *parse_atom(Lexer_T *lexer)
                 }
             }
             result = FunctionCall(identifier, params);
+            lexer_advance(lexer);
         }
 
         else
@@ -173,17 +174,28 @@ ASTNode_T *parse_expr(Lexer_T *lexer, int max_prec)
         LinkedList_T *operators = match_operator_by_criteria(cur->value, -1, OPERATOR_NONE, OPERATORARITY_BINARY, OPERATORASSOC_NONE);
         if(ll_size(operators) != 1)
         {
+
+            ll_free(operators, free);
             operators = match_operator_by_criteria(cur->value, -1, OPERATOR_NONE, OPERATORARITY_UNARY, OPERATORAFFIX_POSTFIX);
 
-            if(ll_size(operators) != 1) return NULL;
+            if(ll_size(operators) != 1)
+            {
+
+                ll_free(operators, free);
+                return NULL;
+            }
 
             lhand = parse_unop((Operator_T*)operators->value, lhand);
             lexer_advance(lexer);
+
+            ll_free(operators, free);
             continue;
         }
-        
         Operator_T *op = operators->value;
         
+        
+        ll_free(operators, free);
+
         if(op->precedence > max_prec) break;
                 
         next_max_prec = op->precedence;
