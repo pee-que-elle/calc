@@ -31,12 +31,13 @@ ASTNode_T *parse_atom(Lexer_T *lexer)
 {
     LexerToken_T *cur = lexer_current(lexer);
     
-    if(cur == NULL) return NULL;
+    ASTNode_T *result = NULL;
 
+    if(cur == NULL) return NULL;
     if(cur->type == TOKEN_LPAREN)
     {
         lexer_advance(lexer);
-        ASTNode_T *result = parse_expr(lexer,  INT_MAX);
+        result = parse_expr(lexer,  INT_MAX);
         
         if(result == NULL) return NULL;
 
@@ -47,8 +48,7 @@ ASTNode_T *parse_atom(Lexer_T *lexer)
             return NULL;
         }
         lexer_advance(lexer);
-        return result;
-
+        
     }
     else if(cur->type == TOKEN_IDENTIFIER)
     {
@@ -98,18 +98,18 @@ ASTNode_T *parse_atom(Lexer_T *lexer)
                     return NULL;
                 }
             }
-            return FunctionCall(identifier, params);
+            result = FunctionCall(identifier, params);
         }
 
         else
         {
-            return identifier;
+            result = identifier;
         }
     }
     else if(cur->type == TOKEN_STRING)
     {
         lexer_advance(lexer);
-        return String(cur->value);
+        result = String(cur->value);
     }
 
     else if(cur->type == TOKEN_FLOAT)
@@ -118,9 +118,8 @@ ASTNode_T *parse_atom(Lexer_T *lexer)
         mpf_t f;
         mpf_init(f);
         tokenfloat2mpf(f, cur->value);
-        ASTNode_T *result =  Float(f);
+        result =  Float(f);
         mpf_clear(f);
-        return result;
     }
 
     else if(cur->type == TOKEN_INT)
@@ -130,11 +129,29 @@ ASTNode_T *parse_atom(Lexer_T *lexer)
         mpz_init(i);
         tokenint2mpz(i, cur->value);
 
-        ASTNode_T *result = Integer(i);
+        result = Integer(i);
 
         mpz_clear(i);
-        return result;
     }
+
+    else if(cur->type == TOKEN_OPERATOR)
+    {
+        lexer_advance(lexer);
+        LexerToken_T *next = lexer_current(lexer);
+
+
+        if(!(tokisoperatable(next->type) || next->type == TOKEN_LPAREN)) return NULL;
+
+        LinkedList_T *ops = match_operator_by_criteria(cur->value, -1, OPERATOR_NONE, OPERATORARITY_UNARY, OPERATORAFFIX_PREFIX);
+
+        if(ll_size(ops) != 1) return NULL;
+        
+        ASTNode_T *operand = parse_atom(lexer);
+
+        result = parse_unop((Operator_T*)ops->value, operand);
+    }
+    
+    return result;
 }
 
 ASTNode_T *parse_expr(Lexer_T *lexer, int max_prec)
