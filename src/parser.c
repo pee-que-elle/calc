@@ -171,7 +171,16 @@ ASTNode_T *parse_expr(Lexer_T *lexer, int max_prec)
         if(cur == NULL || cur->type != TOKEN_OPERATOR) break;
         
         LinkedList_T *operators = match_operator_by_criteria(cur->value, -1, OPERATOR_NONE, OPERATORARITY_BINARY, OPERATORASSOC_NONE);
-        if(ll_size(operators) != 1) return NULL;
+        if(ll_size(operators) != 1)
+        {
+            operators = match_operator_by_criteria(cur->value, -1, OPERATOR_NONE, OPERATORARITY_UNARY, OPERATORAFFIX_POSTFIX);
+
+            if(ll_size(operators) != 1) return NULL;
+
+            lhand = parse_unop((Operator_T*)operators->value, lhand);
+            lexer_advance(lexer);
+            continue;
+        }
         
         Operator_T *op = operators->value;
         
